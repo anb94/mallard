@@ -1,0 +1,85 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+# citations:
+
+# Wickham H, François R, Henry L, Müller K, Vaughan D (2023). _dplyr: A Grammar of Data Manipulation_. R package version 1.1.4, <https://CRAN.R-project.org/package=dplyr>.
+  
+# Wickham H, Hester J, Bryan J (2024). _readr: Read Rectangular Text Data_. R package version 2.1.5, <https://CRAN.R-project.org/package=readr>.
+
+# Szklarczyk D, Kirsch R, Koutrouli M, Nastou K, Mehryary F, Hachilif R, Annika GL, Fang T, Doncheva NT, Pyysalo S, Bork P, Jensen LJ, von Mering C. 'The STRING database in 2023: protein-protein association networks and functional enrichment analyses for any sequenced genome of interest.' Nucleic Acids Res. 2023 Jan 6;51(D1):D638-646
+
+# Moosa Rezwani, Ali Akbar Pourfathollah, Farshid Noorbakhsh, rbioapi: user-friendly R interface to biologic web services’ API, Bioinformatics, Volume 38, Issue 10, 15 May 2022, Pages 2952–2953, https://doi.org/10.1093/bioinformatics/btac172
+
+library(dplyr)
+library(readr)
+library(STRINGdb) 
+library(rbioapi)
+
+```
+
+
+```{r}
+folderpath <- "/Users/WCVan/Downloads/pdac_analysis_vangie/liver_met_basal_results/mapped_ids_msigdb/liver_met_basal_negative_genesets"
+```
+
+
+```{r}
+# Get the list of file names in the folder
+filenames <- list.files(folderpath)
+```
+
+
+#Get STRING interaction network of protein set
+
+```{r}
+# Initialize a list to store the data frames
+network_data_frames <- list()
+
+# Loop over the file names
+for (filename in filenames) {
+  # Construct the file path
+  filepath <- file.path(folderpath, filename)
+  
+  # Read the contents of the file
+  filecontents <- read.delim(filepath, header = TRUE)
+  
+  # Perform operations on the file contents
+  #get interaction network of a protein set
+  int_net <- rba_string_interactions_network(ids = filecontents$STRING_id, species = 9606)
+  
+  # Store the interaction network in a data frame
+  network_data_frames[[filename]] <- int_net
+
+  
+}
+```
+
+
+```{r}
+##Save STRING Mapped ID
+
+# Specify the folder path where you want to save the TSV files
+save_folderpath <- "/Users/WCVan/Downloads/pdac_analysis_vangie/liver_met_basal_results/get_interaction_network_msigdb/liver_met_basal_negative_genesets"
+
+# Loop over the dataframes
+for (term_name in names(network_data_frames)) {
+  df <- network_data_frames[[term_name]]
+  if (nrow(df) > 0) {
+    filename <- paste0(term_name)  # Generate the filename
+    filepath <- file.path(save_folderpath, filename)  # Create the full filepath
+    write.table(df, filepath, sep = "\t", row.names = TRUE, col.names = TRUE, quote=FALSE)  # Save as TSV
+  }
+}
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+
+
+```
+
+
+
+
