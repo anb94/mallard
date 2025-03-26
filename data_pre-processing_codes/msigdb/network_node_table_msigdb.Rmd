@@ -1,0 +1,138 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+# citations:
+
+# Wickham H, François R, Henry L, Müller K, Vaughan D (2023). _dplyr: A Grammar of Data Manipulation_. R package version 1.1.4, <https://CRAN.R-project.org/package=dplyr>.
+  
+# Wickham H, Hester J, Bryan J (2024). _readr: Read Rectangular Text Data_. R package version 2.1.5, <https://CRAN.R-project.org/package=readr>.
+
+# Gustavsen JA, Pai S, Isserlin R et al. RCy3: Network biology using Cytoscape from within R [version 3; peer review: 3 approved]. F1000Research 2019, 8:1774 (https://doi.org/10.12688/f1000research.20887.3)
+
+
+library(dplyr)
+library(readr)
+library(RCy3)
+
+#how to install R package "RCy3":
+#library(BiocManager)
+#BiocManager::install('RCy3')
+
+
+```
+
+```{r}
+# Connect to Cytoscape (must first download Cytoscape from https://cytoscape.org/download.html)
+# Citation of Cytoscape software: 
+# Shannon, P., Markiel, A., Ozier, O., Baliga, N. S., Wang, J. T., Ramage, D., Amin, N., Schwikowski, B., & Ideker, T. (2003). Cytoscape: A Software Environment for Integrated Models of Biomolecular Interaction Networks. Genome Research, 13(11), 2498–2504. https://doi.org/10.1101/gr.1239303
+
+cytoscapePing()
+
+```
+
+
+```{r}
+folderpath <- "/Users/WCVan/Downloads/pdac_analysis_vangie/liver_met_basal_results/get_interaction_network_msigdb/liver_met_basal_positive_genesets"
+
+```
+
+
+```{r}
+# Get the list of file names in the folder
+filenames <- list.files(folderpath)
+
+```
+
+
+#Get Analysis results of network from Cytoscape
+
+```{r}
+# Initialize a list to store the data frames
+node_table_frames <- list()
+analyze_data_frames <- list()
+
+# Loop over the file names
+for (filename in filenames) {
+  # Construct the file path
+  filepath <- file.path(folderpath, filename)
+  
+  # Read the contents of the file
+  filecontents <- read.delim(filepath, header = TRUE)
+  
+  # Perform operations on the file contents
+  # Select specific columns to create a new dataframe
+  network_df <- filecontents[, c("stringId_A", "stringId_B", "score")]
+    
+  # Rename Column 1 and Column 2 to select columns as source and target
+  if (nrow(network_df) > 0) {
+    colnames(network_df)[1:2] <- c("source", "target")
+  }
+    
+  # Creating network in Cytoscape
+  if (nrow(network_df) > 0) {
+    createNetworkFromDataFrames(edges = network_df)
+      
+    if (getNodeCount() >= 4) {
+      # Get analyze network results
+      analyze_data <- analyzeNetwork(directed = FALSE)
+        
+      # Store analyze network results in a data frame
+      analyze_data_frames[[filename]] <- analyze_data
+        
+      # Get node table
+      node_table <- getTableColumns(table = "node", columns = NULL, namespace = "default", network = NULL)
+        
+      # Store node tables in a data frame
+      node_table_frames[[filename]] <- node_table
+        
+    }
+  }
+  
+}
+```
+
+
+```{r}
+##Save Analyze Data of Network
+
+# Specify the folder path where you want to save the TSV files
+save_analyze_folderpath <- "/Users/WCVan/Downloads/pdac_analysis_vangie/liver_met_basal_results/analyze_network_msigdb/liver_met_basal_positive_genesets"
+
+# Loop over the dataframes
+for (term_name in names(analyze_data_frames)) {
+  df <- analyze_data_frames[[term_name]]
+  filename <- paste0(term_name)  # Generate the filename
+  filepath <- file.path(save_analyze_folderpath, filename)  # Create the full filepath
+  write.table(df, filepath, sep = "\t", row.names = TRUE, col.names = TRUE, quote=FALSE)  # Save as TSV
+}
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+
+
+```
+
+
+```{r}
+##Save Node Tables
+
+# Specify the folder path where you want to save the TSV files
+save_folderpath <- "/Users/WCVan/Downloads/pdac_analysis_vangie/liver_met_basal_results/node_tables_msigdb/liver_met_basal_positive_genesets"
+
+# Loop over the dataframes
+for (term_name in names(node_table_frames)) {
+  df <- node_table_frames[[term_name]]
+  filename <- paste0(term_name)  # Generate the filename
+  filepath <- file.path(save_folderpath, filename)  # Create the full filepath
+  write.table(df, filepath, sep = "\t", row.names = TRUE, col.names = TRUE, quote=FALSE)  # Save as TSV
+}
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+
+
+```
+
+
+
