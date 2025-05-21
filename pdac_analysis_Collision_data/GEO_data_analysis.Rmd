@@ -1,0 +1,434 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(dplyr)
+library(forcats)
+library(stringr)
+library(ggplot2)
+library(ggrepel)
+library(readr)
+library(tidyr)
+library(survminer)
+library(GEOquery)
+library(limma)
+library(pheatmap)
+library(org.Hs.eg.db)
+library(oligo)
+library(affy)
+library(matrixStats)
+library(Biobase)
+
+
+#library(BiocManager)
+#BiocManager::install("GEOquery")
+#BiocManager::install("limma")
+#BiocManager::install("pheatmap")
+#BiocManager::install("org.Hs.eg.db")
+```
+
+
+```{r}
+library(GEOquery)
+## change my_id to be the dataset that you want.
+my_id <- "GSE15471"
+gse <- getGEO(my_id)
+
+```
+
+
+```{r}
+## check how many platforms used
+length(gse)
+
+```
+
+
+```{r}
+gse <- gse[[1]]
+gse
+```
+
+
+```{r}
+pData(gse) ## print the sample information
+fData(gse) ## print the gene annotation
+exprs(gse) ## print the expression data
+```
+
+```{r}
+## exprs get the expression levels as a data frame and get the distribution
+summary(exprs(gse))
+```
+
+
+```{r}
+##perform log2() tansformation 
+#exprs(gse_1) <- log2(exprs(gse_1))
+boxplot(exprs(gse),outline=FALSE)
+ 
+```
+ 
+
+```{r}
+sampleInfo <- pData(gse)
+sampleInfo
+```
+
+```{r}
+normal_sample <- sampleInfo[, c("geo_accession", "sample:ch1")]
+#rename the column
+colnames(normal_sample)[colnames(normal_sample) == "sample:ch1"] <- "Subtypes"
+normal_sample <- subset(normal_sample, Subtypes == 'normal')
+normal_sample
+```
+
+
+
+
+```{r}
+wholePDA_subtype <- read.table("/Users/WCVan/Downloads/pdac_analysis_Collision_data/wholePDA_subtype_info.tsv", header = TRUE, sep = "\t")
+#rename the column
+colnames(wholePDA_subtype)[colnames(wholePDA_subtype) == "Sample.identifier"] <- "geo_accession"
+wholePDA_subtype
+```
+
+
+```{r}
+new_sampleInfo <- merge(sampleInfo, wholePDA_subtype, by = "geo_accession", all.x = TRUE)
+new_sampleInfo <- merge(new_sampleInfo, normal_sample, by = "geo_accession", all.x = TRUE)
+new_sampleInfo$Subtypes <- ifelse(!is.na(new_sampleInfo$Subtypes.x), new_sampleInfo$Subtypes.x, new_sampleInfo$Subtypes.y)
+new_sampleInfo$Subtypes.x <- NULL
+new_sampleInfo$Subtypes.y <- NULL
+new_sampleInfo <- new_sampleInfo %>% arrange(geo_accession)
+new_sampleInfo
+
+```
+
+```{r}
+sampleInfo <- dplyr::select(new_sampleInfo, geo_accession, title, characteristics_ch1, Subtypes) %>% { 
+    rownames(.) <- .$geo_accession # set the rownames
+    .[, -1]  # Remove the column from the data frame
+  }
+
+sampleInfo$title <- NULL
+names(sampleInfo)[names(sampleInfo) == "characteristics_ch1"] <- "patient"
+sampleInfo
+
+
+```
+
+
+```{r}
+corMatrix <- cor(exprs(gse),use="c")
+pheatmap(corMatrix)      
+```
+
+
+```{r}
+rownames(sampleInfo)
+```
+
+```{r}
+colnames(corMatrix)
+```
+
+
+```{r}
+rownames(sampleInfo) <- colnames(corMatrix)
+pheatmap(corMatrix, annotation_col=sampleInfo)     
+```
+
+
+```{r}
+pca <- prcomp(t(exprs(gse)))
+
+## Join the PCs to the sample information
+cbind(sampleInfo, pca$x) %>% 
+ggplot(aes(x = PC1, y=PC2, col=Subtypes,label=paste("Patient", patient))) + geom_point() + geom_text_repel()
+```
+
+
+
+```{r}
+#export the expression data
+#features <- fData(gse)
+#features
+#features <- dplyr::select(features,ID,Symbol,Entrez_Gene_ID,Chromosome,Cytoband)
+#full_output <- cbind(features,exprs(gse))
+#write_csv(full_output, path="full_output.csv")
+```
+
+
+
+
+```{r}
+#perform differential expression
+
+#design matrix
+design <- model.matrix(~0+sampleInfo$Subtypes)
+design
+```
+
+```{r}
+#rename columns
+colnames(design) <- c("Classical", "ExocrineLike", "Normal", "QM")
+design
+```
+
+
+```{r}
+#improve detecting differential expression by filtering lowly-expressed genes
+#cut-off: median expression level (50% of genes will not be expressed)
+
+exprs_data <- exprs(gse)
+
+summary(exprs_data)
+
+# calculate median expression level
+cutoff <- median(exprs_data)
+
+# TRUE or FALSE for whether each gene is "expressed" in each sample
+is_expressed <- exprs_data > cutoff
+
+# Identify genes expressed in more than 2 samples
+keep <- rowSums(is_expressed) > 2
+
+# check how many genes are removed / retained.
+table(keep)
+
+# subset to just those expressed genes
+gse <- gse[keep,]
+
+
+```
+
+```{r}
+#discard any arrays which seem to be outliers prior to differential expressions
+
+# calculate relative array weights
+aw <- arrayWeights(exprs(gse),design)
+aw
+
+```
+
+
+```{r}
+#accept weights
+fit <- lmFit(exprs(gse), design,
+             weights = aw)
+head(fit$coefficients)
+
+```
+
+
+```{r}
+# Group 1: Normal and QM
+contrasts_QM <- makeContrasts(Normal - QM, levels=design)
+fit2_QM <- contrasts.fit(fit, contrasts_QM)
+fit2_QM <- eBayes(fit2_QM)
+
+# Group 2: Normal and Classical
+contrasts_classical <- makeContrasts(Classical - Normal, levels=design)
+fit2_classical <- contrasts.fit(fit, contrasts_classical)
+fit2_classical <- eBayes(fit2_classical)
+
+# Group 3: Normal and ExocrineLike
+contrasts_Ex <- makeContrasts(ExocrineLike - Normal, levels=design)
+fit2_Ex <- contrasts.fit(fit, contrasts_Ex)
+fit2_Ex <- eBayes(fit2_Ex)
+
+
+```
+
+
+```{r}
+anno <- fData(gse)
+anno
+
+```
+
+
+```{r}
+missing_indices <- which(is.na(anno$`Gene Symbol`))
+missing_indices
+
+```
+
+
+
+```{r}
+anno1 <- dplyr::select(anno, `Gene Symbol`)
+anno1$`Gene Symbol` <- gsub(" /// .*", "", anno1$`Gene Symbol`)
+anno1
+
+```
+
+
+
+```{r}
+missing_indices <- which(is.na(anno1$`Gene Symbol`))
+missing_indices
+
+```
+
+
+```{r}
+fit2_QM$genes <- anno1
+topTable(fit2_QM)
+```
+
+
+```{r}
+fit2_classical$genes <- anno1
+topTable(fit2_classical)
+```
+
+
+```{r}
+fit2_Ex$genes <- anno1
+topTable(fit2_Ex)
+```
+
+
+# Group 1: Normal and QM 
+```{r}
+full_results_QM <- topTable(fit2_QM, number=Inf)
+full_results_QM <- tibble::rownames_to_column(full_results_QM,"ID")
+full_results_QM
+```
+
+
+
+```{r}
+save_filepath <- "/Users/WCVan/Downloads/pdac_analysis_Collision_data/QM.top.table.tsv"
+write.table(full_results_QM, save_filepath, sep = "\t", row.names = TRUE, col.names = TRUE, quote=FALSE)  # Save as TSV
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+
+```
+
+
+
+```{r}
+ggplot(full_results_QM,aes(x = logFC, y=B)) + geom_point()
+```
+
+
+```{r}
+p_cutoff <- 0.05
+fc_cutoff <- 1
+
+full_results_QM %>%
+  mutate(Significant = adj.P.Val < p_cutoff & abs(logFC) > fc_cutoff) %>%
+  ggplot(aes(x = logFC, y = B, col = Significant)) + geom_point(size=2)+
+  scale_colour_manual(values = c("#FBDCE8","#BF165E")) + theme_bw()
+```
+
+```{r}
+p_cutoff <- 0.05
+fc_cutoff <- 0.5
+
+full_results_QM %>%
+  mutate(Significant = adj.P.Val < p_cutoff & abs(logFC) < fc_cutoff) %>%
+  ggplot(aes(x = logFC, y = B, col = Significant)) + geom_point(size=2)+
+  scale_colour_manual(values = c("#FBDCE8","#BF165E")) + theme_bw()
+```
+
+
+
+
+
+# Group 2: Normal and Classical
+```{r}
+full_results_classical <- topTable(fit2_classical, number=Inf)
+full_results_classical <- tibble::rownames_to_column(full_results_classical,"ID")
+full_results_classical
+```
+
+
+```{r}
+save_filepath <- "/Users/WCVan/Downloads/pdac_analysis_Collision_data/classical.top.table.tsv"
+write.table(full_results_classical, save_filepath, sep = "\t", row.names = TRUE, col.names = TRUE, quote=FALSE)  # Save as TSV
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+
+```
+
+
+```{r}
+ggplot(full_results_classical,aes(x = logFC, y=B)) + geom_point()
+```
+
+
+```{r}
+p_cutoff <- 0.05
+fc_cutoff <- 1
+
+full_results_classical %>%
+  mutate(Significant = adj.P.Val < p_cutoff & abs(logFC) > fc_cutoff) %>%
+  ggplot(aes(x = logFC, y = B, col = Significant)) + geom_point(size=2)+
+  scale_colour_manual(values = c("#FBDCE8","#BF165E")) + theme_bw()
+```
+
+```{r}
+p_cutoff <- 0.05
+fc_cutoff <- 0.5
+
+full_results_classical %>%
+  mutate(Significant = adj.P.Val < p_cutoff & abs(logFC) < fc_cutoff) %>%
+  ggplot(aes(x = logFC, y = B, col = Significant)) + geom_point(size=2)+
+  scale_colour_manual(values = c("#FBDCE8","#BF165E")) + theme_bw()
+```
+
+
+
+
+# Group 3: Normal and ExocrineLike
+```{r}
+full_results_Ex <- topTable(fit2_Ex, number=Inf)
+full_results_Ex <- tibble::rownames_to_column(full_results_Ex,"ID")
+full_results_Ex
+```
+
+
+```{r}
+save_filepath <- "/Users/WCVan/Downloads/pdac_analysis_Collision_data/ExocrineLike.top.table.tsv"
+write.table(full_results_Ex, save_filepath, sep = "\t", row.names = TRUE, col.names = TRUE, quote=FALSE)  # Save as TSV
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+
+```
+
+
+```{r}
+ggplot(full_results_Ex,aes(x = logFC, y=B)) + geom_point()
+```
+
+
+```{r}
+p_cutoff <- 0.05
+fc_cutoff <- 1
+
+full_results_Ex %>%
+  mutate(Significant = adj.P.Val < p_cutoff & abs(logFC) > fc_cutoff) %>%
+  ggplot(aes(x = logFC, y = B, col = Significant)) + geom_point(size=2)+
+  scale_colour_manual(values = c("#FBDCE8","#BF165E")) + theme_bw()
+```
+
+```{r}
+p_cutoff <- 0.05
+fc_cutoff <- 0.2
+
+full_results_Ex %>%
+  mutate(Significant = adj.P.Val < p_cutoff & abs(logFC) < fc_cutoff) %>%
+  ggplot(aes(x = logFC, y = B, col = Significant)) + geom_point(size=2)+
+  scale_colour_manual(values = c("#FBDCE8","#BF165E")) + theme_bw()
+```
+
+
+```
+
+

@@ -1,0 +1,206 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(dplyr)
+library(readr)
+```
+
+
+```{r}
+genesets <- read_tsv(file = "/Users/WCVan/Downloads/pdac_analysis_Collision_data/exocrine_results/clusterprofilerout_GO/GENESET_exocrine_allgenes.tsv")
+```
+
+```{r}
+#ontology <- as.list(genesets$ID)
+```
+
+
+```{r}
+termsandgenes <- genesets[c(1,2,12)]
+```
+
+```{r}
+termsandgenes$ID <- gsub(":", "_", termsandgenes$ID)
+```
+
+```{r}
+head(termsandgenes)
+```
+
+```{r}
+CC_termsandgenes <- termsandgenes[termsandgenes$ONTOLOGY == 'CC', ]
+BP_termsandgenes <- termsandgenes[termsandgenes$ONTOLOGY == 'BP', ]
+MF_termsandgenes <- termsandgenes[termsandgenes$ONTOLOGY == 'MF', ]
+```
+
+```{r}
+head(CC_termsandgenes)
+```
+```{r}
+#drop the first column
+CC_termsandgenes<- subset(CC_termsandgenes, select = -ONTOLOGY)
+head(CC_termsandgenes)
+```
+
+
+```{r}
+head(BP_termsandgenes)
+```
+```{r}
+#drop the first column
+BP_termsandgenes<- subset(BP_termsandgenes, select = -ONTOLOGY)
+head(BP_termsandgenes)
+```
+
+
+```{r}
+head(MF_termsandgenes)
+```
+```{r}
+#drop the first column
+MF_termsandgenes<- subset(MF_termsandgenes, select = -ONTOLOGY)
+head(MF_termsandgenes)
+```
+
+
+
+```{r}
+# Create an empty list to store dataframes for each term
+CC_term_dataframes <- list()
+
+# Iterate over each row in the original dataframe
+for (i in 1:nrow(CC_termsandgenes)) {
+  CC_terms <- CC_termsandgenes$ID[i]  # Get the term
+  CC_genes <- unlist(strsplit(CC_termsandgenes$core_enrichment[i], "/"))  # Get the gene names
+
+  # Create a new dataframe for the current term
+  #term_df <- data.frame(Term = terms, Gene = genes)
+  CC_term_df <- data.frame(Gene = CC_genes)
+
+  # Add the dataframe to the list
+  CC_term_dataframes[[CC_terms]] <- CC_term_df
+}
+
+# Now term_dataframes contains separate dataframes for each term
+# Access them using term_dataframes$<term_name>
+
+ 
+```
+
+
+
+
+```{r}
+# Create an empty list to store dataframes for each term
+BP_term_dataframes <- list()
+
+# Iterate over each row in the original dataframe
+for (i in 1:nrow(BP_termsandgenes)) {
+  BP_terms <- BP_termsandgenes$ID[i]  # Get the term
+  BP_genes <- unlist(strsplit(BP_termsandgenes$core_enrichment[i], "/"))  # Get the gene names
+
+  # Create a new dataframe for the current term
+  #term_df <- data.frame(Term = terms, Gene = genes)
+  BP_term_df <- data.frame(Gene = BP_genes)
+
+  # Add the dataframe to the list
+  BP_term_dataframes[[BP_terms]] <- BP_term_df
+}
+
+# Now term_dataframes contains separate dataframes for each term
+# Access them using term_dataframes$<term_name>
+
+ 
+```
+
+
+
+
+```{r}
+# Create an empty list to store dataframes for each term
+MF_term_dataframes <- list()
+
+# Iterate over each row in the original dataframe
+for (i in 1:nrow(MF_termsandgenes)) {
+  MF_terms <- MF_termsandgenes$ID[i]  # Get the term
+  MF_genes <- unlist(strsplit(MF_termsandgenes$core_enrichment[i], "/"))  # Get the gene names
+
+  # Create a new dataframe for the current term
+  #term_df <- data.frame(Term = terms, Gene = genes)
+  MF_term_df <- data.frame(Gene = MF_genes)
+
+  # Add the dataframe to the list
+  MF_term_dataframes[[MF_terms]] <- MF_term_df
+}
+
+# Now term_dataframes contains separate dataframes for each term
+# Access them using term_dataframes$<term_name>
+
+ 
+```
+ 
+
+
+```{r}
+# Assuming you have a list of dataframes called term_dataframes
+# Modify this list according to your actual dataframes
+
+# Specify the folder path where you want to save the TSV files
+CC_folderpath <- "/Users/WCVan/Downloads/pdac_analysis_Collision_data/exocrine_results/GO_gsea/exocrine_all_genesetsCC"
+
+# Loop over the dataframes
+for (CC_term_name in names(CC_term_dataframes)) {
+  CC_df <- CC_term_dataframes[[CC_term_name]]
+  CC_filename <- paste0(CC_term_name, ".tsv")  # Generate the filename
+  CC_filepath <- file.path(CC_folderpath, CC_filename)  # Create the full filepath
+  write.table(CC_df, CC_filepath, sep = "\t", row.names = FALSE, col.names = FALSE, quote=FALSE)  # Save as TSV
+}
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+```
+
+
+```{r}
+# Assuming you have a list of dataframes called term_dataframes
+# Modify this list according to your actual dataframes
+
+# Specify the folder path where you want to save the TSV files
+BP_folderpath <- "/Users/WCVan/Downloads/pdac_analysis_Collision_data/exocrine_results/GO_gsea/exocrine_all_genesetsBP"
+
+# Loop over the dataframes
+for (BP_term_name in names(BP_term_dataframes)) {
+  BP_df <- BP_term_dataframes[[BP_term_name]]
+  BP_filename <- paste0(BP_term_name, ".tsv")  # Generate the filename
+  BP_filepath <- file.path(BP_folderpath, BP_filename)  # Create the full filepath
+  write.table(BP_df, BP_filepath, sep = "\t", row.names = FALSE, col.names = FALSE, quote=FALSE)  # Save as TSV
+}
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+```
+
+```{r}
+# Assuming you have a list of dataframes called term_dataframes
+# Modify this list according to your actual dataframes
+
+# Specify the folder path where you want to save the TSV files
+MF_folderpath <- "/Users/WCVan/Downloads/pdac_analysis_Collision_data/exocrine_results/GO_gsea/exocrine_all_genesetsMF"
+
+# Loop over the dataframes
+for (MF_term_name in names(MF_term_dataframes)) {
+  MF_df <- MF_term_dataframes[[MF_term_name]]
+  MF_filename <- paste0(MF_term_name, ".tsv")  # Generate the filename
+  MF_filepath <- file.path(MF_folderpath, MF_filename)  # Create the full filepath
+  write.table(MF_df, MF_filepath, sep = "\t", row.names = FALSE, col.names = FALSE, quote=FALSE)  # Save as TSV
+}
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+```
+
+
+
+```
+
+
