@@ -1,0 +1,160 @@
+					#	GENERATING INPUT FILES FOR GATV2 MODEL	#
+
+
+ROOT DIR: "/Users/anb/Documents/CMEB-Lab/Projects/ML-DRG-PDAC-2025/pdac_feature_generation"
+
+
+Variables:
+$LOC = Location i.e. local or met
+$SUB = Subtype i.e. classic or basal
+$GROUP = Disease-relatedness category i.e. all positive or negative 
+$GENESET = enrichment i.e. BP CC MF
+
+
+
+					## Step 1: Gene Set Analysis ##
+
+
+CODE FILE: "pdac-clusterprofileranalysis-msigdb" 
+
+INPUT: "$LOC_$SUB_results/filtered-degs" as inputs)
+OUTPUT: 
+
+$LOC_$SUB_results/clusterprofilerout_msigdb/GENESET_$LOC_$SUB_$GROUP.tsv
+$LOC_$SUB_results/clusterprofilerout_msigdb/$LOC_$SUB_$GROUP.tsv
+
+NOTE: remember to check pAdjustMethod in gseGO() :  use "BH" in ALL genes, use "BH" in POSITIVE genes, and use "none" in NEGATIVE genes
+
+
+PROGRESS:
+DONE for
+local classic
+Local basal
+
+
+					## Step 2: Manipulate GO Results ##
+
+
+CODE FILE: "./gsea-manipulation-msigdb"
+INPUT: "$LOC_$SUB_results/clusterprofilerout_msigdb"
+OUTPUT: "$LOC_$SUB_results/gsea_msigdb/$LOC_$SUB_$GROUP_$GENESET"
+
+PROGRESS: DONE for
+Local classic
+Local basal
+
+
+					## Step 3: Map ID of terms ##
+
+
+
+CODE FILE: ".mapping_id_msigdb"
+
+INPUT: use the files of the folder ".../gsea_GO" as inputs
+OUTPUT: $LOC_$SUB_results/mapped_ids_GO/$LOC_$SUB_$GROUP_$GENESET
+
+DONE for
+Local classic
+Local basal - 
+
+
+
+NOTE: POSITIVE was split into 2 parts manually (SEE note in part 4).
+
+
+					## Step 4: Get interaction Network ##
+
+
+
+CODE FILE: "./get_interaction_network_msigdb_$LOC_$SUB" 
+
+INPUT: 	".../mapped_ids_msigdb"
+OUTPUT:	$LOC_$SUB_results/get_interaction_network_msigdb/$LOC_$SUB_$GROUP_$GENESET
+
+PROGRESS:
+DONE for 
+
+
+NOTE: split large directories into subdirectories due to volume causing memory issues. Each file can be analysed independent of one another as its collecting and analysing a network per file.
+
+
+
+					## Step 5: Network Node Table ##
+
+CODE FILE: "./network_node_table_msigdb"
+
+INPUT: ".../get_interaction_network_msigdb" as inputs. 
+OUTPUT: This step generates files in both "$LOC_$SUB_results/node_tables_msigdb/$LOC_$SUB_$GROUP_$GENESET" and "$LOC_$SUB_results/analyze_network_msigdb/$LOC_$SUB_$GROUP_$GENESET"
+ 
+PROGRESS:
+DONE for 
+Local classic
+
+NOTE: Analyse data in smallest possible chunks due to large file sizes.
+3 PARTS FOR local classic all
+4 for local basal all
+
+					## Step 6: Modify Node Table ##
+
+
+CODE FILE: "./modify_node_table_GO"
+
+INPUT: ".../node_tables_msigdb"
+OUTPUT: $LOC_$SUB_results/modified_node_tables_msigdb/$LOC_$SUB_$GROUP_$GENESET
+
+PROGRESS:
+DONE for 
+Local classic
+Local basal
+
+NOTE: Need to use stringdb_database folder. Origin is "https://string-db.org/cgi/download?sessionId=bCV09YoLkzbk&species_text=Homo+sapiens&settings_expanded=0&min_download_score=0&filter_redundant_pairs=0&delimiter_type=txt"
+
+
+
+					## Step 7: Replace Zeros in Modify Node Table ##
+
+
+CODE FILE: "./replace_zeros_msigdb" 
+INPUT: ".../modified_node_tables_msigdb"
+OUTPUT: $LOC_$SUB_results/replace_zeros_msigdb/$LOC_$SUB_$GROUP_$GENESET
+
+PROGRESS: DONE for 
+Local classic
+Local basal
+
+
+					## Step 8: Gene Symbols ##
+
+
+CODE FILE: "./gene_symbol_term_table_msigdb" 
+INPUT: ".../replace_zeros_GO"
+OUTPUT: "$LOC_$SUB_results/ClosenessCentrality_tables_GO/$LOC_$SUB_$GROUP_$GENESET"
+
+PROGRESS: DONE for 
+Local classic
+Local basal
+
+NOTE: change the code lines for getting the ClosenessCentrality results or BetweennessCentrality results;
+CC_result_df <- CC_filecontents[, c("hgnc_symbol", "ClosenessCentrality")]
+CC_result_df <- CC_result_df %>% pivot_wider(names_from = GO_id, values_from = ClosenessCentrality)
+
+
+
+
+					## Step 9: Combine Datafranes ##
+
+
+9) "./combine_dfs_msigdb" 
+INPUT: 	1) BetweennessCentrality ".../BetweennessCentrality_tables_msigdb" 
+		OR 
+		2) ClosenessCentrality ".../ClosenessCentrality_tables_msigdb"
+
+OUTPUT:$LOC_$SUB_results/ML_input_files/ClosenessCentrality_tables/msigdb/$LOC_$SUB_$GROUP.csv
+  
+
+PROGRESS:
+DONE for 
+Local classic
+Local basal
+
+

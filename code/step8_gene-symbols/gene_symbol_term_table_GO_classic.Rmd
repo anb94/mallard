@@ -1,0 +1,596 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+Set working directory
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = "/Users/anb/Documents/CMEB-Lab/Projects/ML-DRG-PDAC-2025/pdac_feature_generation")
+```
+
+
+```{r}
+library(dplyr)
+library(readr)
+library(tidyr)
+```
+
+# ALL #
+
+
+```{r}
+CC_folderpath <- "local_classic_results/replace_zeros_GO/local_classic_all_genesetsCC"
+MF_folderpath <- "local_classic_results/replace_zeros_GO/local_classic_all_genesetsMF"
+BP_folderpath <- "local_classic_results/replace_zeros_GO/local_classic_all_genesetsBP"
+```
+
+
+```{r}
+# Get the list of file names in the folder
+CC_filenames <- list.files(CC_folderpath)
+MF_filenames <- list.files(MF_folderpath)
+BP_filenames <- list.files(BP_folderpath)
+```
+
+
+# Appending the gene symbol column into the node tables
+# CC Files
+```{r}
+# Initialize a list to store the data frames
+results_data_frames_CC <- list()
+
+
+# Loop over the file names
+for (CC_filename in CC_filenames) {
+  # Construct the file path
+  CC_filepath <- file.path(CC_folderpath, CC_filename)
+  
+  # Read the contents of the file
+  CC_filecontents <- read.table(CC_filepath, header = TRUE)
+
+  # Select specific columns to create a new dataframe
+  CC_result_df <- CC_filecontents[, c("hgnc_symbol", "ClosenessCentrality")]
+  
+  # Add a new column with the filename (Remove ".tsv" format)
+  CC_result_df$CC_filename <- gsub("\\.tsv$", "", CC_filename)
+  
+  # Re-format the 'filename' column
+  CC_result_df$CC_filename <- gsub("_", ":", CC_result_df$CC_filename)
+  
+  # Rename the column of GO id
+  colnames(CC_result_df)[colnames(CC_result_df) == "CC_filename"] <- "GO_id"
+  
+  # Reshape the dataframe from long format to wide format
+  CC_result_df <- CC_result_df %>% pivot_wider(names_from = GO_id, values_from = ClosenessCentrality)
+  
+  # Store all results in a data frame
+  results_data_frames_CC[[CC_filename]] <- CC_result_df
+  
+}
+
+```
+
+
+```{r}
+## Save modified node tables of the interaction network
+
+
+# Specify the folder path where you want to save the TSV files
+save_folderpath_CC <- "local_classic_results/ClosenessCentrality_tables_GO/local_classic_all_genesetsCC"
+
+# Loop over the dataframes
+for (CC_term_name in names(results_data_frames_CC)) {
+  CC_df <- results_data_frames_CC[[CC_term_name]]
+  CC_filename <- paste0(CC_term_name)  # Generate the filename
+  CC_filepath <- file.path(save_folderpath_CC, CC_filename)  # Create the full filepath
+  write.table(CC_df, CC_filepath, sep = "\t", row.names = TRUE, col.names = TRUE, quote=FALSE)  # Save as TSV
+}
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+```
+
+
+
+
+
+# MF Files
+```{r}
+# Initialize a list to store the data frames
+results_data_frames_MF <- list()
+
+
+# Loop over the file names
+for (MF_filename in MF_filenames) {
+  # Construct the file path
+  MF_filepath <- file.path(MF_folderpath, MF_filename)
+  
+  # Read the contents of the file
+  MF_filecontents <- read.table(MF_filepath, header = TRUE)
+
+  # Select specific columns to create a new dataframe
+  MF_result_df <- MF_filecontents[, c("hgnc_symbol", "ClosenessCentrality")]
+  
+  # Add a new column with the filename (Remove ".tsv" format)
+  MF_result_df$MF_filename <- gsub("\\.tsv$", "", MF_filename)
+  
+  # Re-format the 'filename' column
+  MF_result_df$MF_filename <- gsub("_", ":", MF_result_df$MF_filename)
+  
+  # Rename the column of GO id
+  colnames(MF_result_df)[colnames(MF_result_df) == "MF_filename"] <- "GO_id"
+  
+  # Reshape the dataframe from long format to wide format
+  MF_result_df <- MF_result_df %>% pivot_wider(names_from = GO_id, values_from = ClosenessCentrality)
+  
+  # Store all results in a data frame
+  results_data_frames_MF[[MF_filename]] <- MF_result_df
+  
+}
+
+```
+
+
+```{r}
+## Save modified node tables of the interaction network
+
+
+# Specify the folder path where you want to save the TSV files
+save_folderpath_MF <- "local_classic_results/ClosenessCentrality_tables_GO/local_classic_all_genesetsMF"
+
+# Loop over the dataframes
+for (MF_term_name in names(results_data_frames_MF)) {
+  MF_df <- results_data_frames_MF[[MF_term_name]]
+  MF_filename <- paste0(MF_term_name)  # Generate the filename
+  MF_filepath <- file.path(save_folderpath_MF, MF_filename)  # Create the full filepath
+  write.table(MF_df, MF_filepath, sep = "\t", row.names = TRUE, col.names = TRUE, quote=FALSE)  # Save as TSV
+}
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+```
+
+
+
+
+
+# BP Files
+```{r}
+# Initialize a list to store the data frames
+results_data_frames_BP <- list()
+
+
+# Loop over the file names
+for (BP_filename in BP_filenames) {
+  # Construct the file path
+  BP_filepath <- file.path(BP_folderpath, BP_filename)
+  
+  # Read the contents of the file
+  BP_filecontents <- read.table(BP_filepath, header = TRUE)
+
+  # Select specific columns to create a new dataframe
+  BP_result_df <- BP_filecontents[, c("hgnc_symbol", "ClosenessCentrality")]
+  
+  # Add a new column with the filename (Remove ".tsv" format)
+  BP_result_df$BP_filename <- gsub("\\.tsv$", "", BP_filename)
+  
+  # Re-format the 'filename' column
+  BP_result_df$BP_filename <- gsub("_", ":", BP_result_df$BP_filename)
+  
+  # Rename the column of GO id
+  colnames(BP_result_df)[colnames(BP_result_df) == "BP_filename"] <- "GO_id"
+  
+  # Reshape the dataframe from long format to wide format
+  BP_result_df <- BP_result_df %>% pivot_wider(names_from = GO_id, values_from = ClosenessCentrality)
+  
+  # Store all results in a data frame
+  results_data_frames_BP[[BP_filename]] <- BP_result_df
+  
+}
+
+```
+
+
+```{r}
+## Save modified node tables of the interaction network
+
+
+# Specify the folder path where you want to save the TSV files
+save_folderpath_BP <- "local_classic_results/ClosenessCentrality_tables_GO/local_classic_all_genesetsBP"
+
+# Loop over the dataframes
+for (BP_term_name in names(results_data_frames_BP)) {
+  BP_df <- results_data_frames_BP[[BP_term_name]]
+  BP_filename <- paste0(BP_term_name)  # Generate the filename
+  BP_filepath <- file.path(save_folderpath_BP, BP_filename)  # Create the full filepath
+  write.table(BP_df, BP_filepath, sep = "\t", row.names = TRUE, col.names = TRUE, quote=FALSE)  # Save as TSV
+}
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+```
+
+
+
+
+# NDAGs #
+
+```{r}
+CC_folderpath <- "local_classic_results/replace_zeros_GO/local_classic_negative_genesetsCC"
+MF_folderpath <- "local_classic_results/replace_zeros_GO/local_classic_negative_genesetsMF"
+BP_folderpath <- "local_classic_results/replace_zeros_GO/local_classic_negative_genesetsBP"
+```
+
+
+```{r}
+# Get the list of file names in the folder
+CC_filenames <- list.files(CC_folderpath)
+MF_filenames <- list.files(MF_folderpath)
+BP_filenames <- list.files(BP_folderpath)
+```
+
+
+# Appending the gene symbol column into the node tables
+# CC Files
+```{r}
+# Initialize a list to store the data frames
+results_data_frames_CC <- list()
+
+
+# Loop over the file names
+for (CC_filename in CC_filenames) {
+  # Construct the file path
+  CC_filepath <- file.path(CC_folderpath, CC_filename)
+  
+  # Read the contents of the file
+  CC_filecontents <- read.table(CC_filepath, header = TRUE)
+
+  # Select specific columns to create a new dataframe
+  CC_result_df <- CC_filecontents[, c("hgnc_symbol", "ClosenessCentrality")]
+  
+  # Add a new column with the filename (Remove ".tsv" format)
+  CC_result_df$CC_filename <- gsub("\\.tsv$", "", CC_filename)
+  
+  # Re-format the 'filename' column
+  CC_result_df$CC_filename <- gsub("_", ":", CC_result_df$CC_filename)
+  
+  # Rename the column of GO id
+  colnames(CC_result_df)[colnames(CC_result_df) == "CC_filename"] <- "GO_id"
+  
+  # Reshape the dataframe from long format to wide format
+  CC_result_df <- CC_result_df %>% pivot_wider(names_from = GO_id, values_from = ClosenessCentrality)
+  
+  # Store all results in a data frame
+  results_data_frames_CC[[CC_filename]] <- CC_result_df
+  
+}
+
+```
+
+
+```{r}
+## Save modified node tables of the interaction network
+
+
+# Specify the folder path where you want to save the TSV files
+save_folderpath_CC <- "local_classic_results/ClosenessCentrality_tables_GO/local_classic_negative_genesetsCC"
+
+# Loop over the dataframes
+for (CC_term_name in names(results_data_frames_CC)) {
+  CC_df <- results_data_frames_CC[[CC_term_name]]
+  CC_filename <- paste0(CC_term_name)  # Generate the filename
+  CC_filepath <- file.path(save_folderpath_CC, CC_filename)  # Create the full filepath
+  write.table(CC_df, CC_filepath, sep = "\t", row.names = TRUE, col.names = TRUE, quote=FALSE)  # Save as TSV
+}
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+```
+
+
+
+
+
+# MF Files
+```{r}
+# Initialize a list to store the data frames
+results_data_frames_MF <- list()
+
+
+# Loop over the file names
+for (MF_filename in MF_filenames) {
+  # Construct the file path
+  MF_filepath <- file.path(MF_folderpath, MF_filename)
+  
+  # Read the contents of the file
+  MF_filecontents <- read.table(MF_filepath, header = TRUE)
+
+  # Select specific columns to create a new dataframe
+  MF_result_df <- MF_filecontents[, c("hgnc_symbol", "ClosenessCentrality")]
+  
+  # Add a new column with the filename (Remove ".tsv" format)
+  MF_result_df$MF_filename <- gsub("\\.tsv$", "", MF_filename)
+  
+  # Re-format the 'filename' column
+  MF_result_df$MF_filename <- gsub("_", ":", MF_result_df$MF_filename)
+  
+  # Rename the column of GO id
+  colnames(MF_result_df)[colnames(MF_result_df) == "MF_filename"] <- "GO_id"
+  
+  # Reshape the dataframe from long format to wide format
+  MF_result_df <- MF_result_df %>% pivot_wider(names_from = GO_id, values_from = ClosenessCentrality)
+  
+  # Store all results in a data frame
+  results_data_frames_MF[[MF_filename]] <- MF_result_df
+  
+}
+
+```
+
+
+```{r}
+## Save modified node tables of the interaction network
+
+
+# Specify the folder path where you want to save the TSV files
+save_folderpath_MF <- "local_classic_results/ClosenessCentrality_tables_GO/local_classic_negative_genesetsMF"
+
+# Loop over the dataframes
+for (MF_term_name in names(results_data_frames_MF)) {
+  MF_df <- results_data_frames_MF[[MF_term_name]]
+  MF_filename <- paste0(MF_term_name)  # Generate the filename
+  MF_filepath <- file.path(save_folderpath_MF, MF_filename)  # Create the full filepath
+  write.table(MF_df, MF_filepath, sep = "\t", row.names = TRUE, col.names = TRUE, quote=FALSE)  # Save as TSV
+}
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+```
+
+
+
+
+
+# BP Files
+```{r}
+# Initialize a list to store the data frames
+results_data_frames_BP <- list()
+
+
+# Loop over the file names
+for (BP_filename in BP_filenames) {
+  # Construct the file path
+  BP_filepath <- file.path(BP_folderpath, BP_filename)
+  
+  # Read the contents of the file
+  BP_filecontents <- read.table(BP_filepath, header = TRUE)
+
+  # Select specific columns to create a new dataframe
+  BP_result_df <- BP_filecontents[, c("hgnc_symbol", "ClosenessCentrality")]
+  
+  # Add a new column with the filename (Remove ".tsv" format)
+  BP_result_df$BP_filename <- gsub("\\.tsv$", "", BP_filename)
+  
+  # Re-format the 'filename' column
+  BP_result_df$BP_filename <- gsub("_", ":", BP_result_df$BP_filename)
+  
+  # Rename the column of GO id
+  colnames(BP_result_df)[colnames(BP_result_df) == "BP_filename"] <- "GO_id"
+  
+  # Reshape the dataframe from long format to wide format
+  BP_result_df <- BP_result_df %>% pivot_wider(names_from = GO_id, values_from = ClosenessCentrality)
+  
+  # Store all results in a data frame
+  results_data_frames_BP[[BP_filename]] <- BP_result_df
+  
+}
+
+```
+
+
+```{r}
+## Save modified node tables of the interaction network
+
+
+# Specify the folder path where you want to save the TSV files
+save_folderpath_BP <- "local_classic_results/ClosenessCentrality_tables_GO/local_classic_negative_genesetsBP"
+
+# Loop over the dataframes
+for (BP_term_name in names(results_data_frames_BP)) {
+  BP_df <- results_data_frames_BP[[BP_term_name]]
+  BP_filename <- paste0(BP_term_name)  # Generate the filename
+  BP_filepath <- file.path(save_folderpath_BP, BP_filename)  # Create the full filepath
+  write.table(BP_df, BP_filepath, sep = "\t", row.names = TRUE, col.names = TRUE, quote=FALSE)  # Save as TSV
+}
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+```
+
+# DAGs #
+
+
+```{r}
+CC_folderpath <- "local_classic_results/replace_zeros_GO/local_classic_positive_genesetsCC"
+MF_folderpath <- "local_classic_results/replace_zeros_GO/local_classic_positive_genesetsMF"
+BP_folderpath <- "local_classic_results/replace_zeros_GO/local_classic_positive_genesetsBP"
+```
+
+
+```{r}
+# Get the list of file names in the folder
+CC_filenames <- list.files(CC_folderpath)
+MF_filenames <- list.files(MF_folderpath)
+BP_filenames <- list.files(BP_folderpath)
+```
+
+
+# Appending the gene symbol column into the node tables
+# CC Files
+```{r}
+# Initialize a list to store the data frames
+results_data_frames_CC <- list()
+
+
+# Loop over the file names
+for (CC_filename in CC_filenames) {
+  # Construct the file path
+  CC_filepath <- file.path(CC_folderpath, CC_filename)
+  
+  # Read the contents of the file
+  CC_filecontents <- read.table(CC_filepath, header = TRUE)
+
+  # Select specific columns to create a new dataframe
+  CC_result_df <- CC_filecontents[, c("hgnc_symbol", "ClosenessCentrality")]
+  
+  # Add a new column with the filename (Remove ".tsv" format)
+  CC_result_df$CC_filename <- gsub("\\.tsv$", "", CC_filename)
+  
+  # Re-format the 'filename' column
+  CC_result_df$CC_filename <- gsub("_", ":", CC_result_df$CC_filename)
+  
+  # Rename the column of GO id
+  colnames(CC_result_df)[colnames(CC_result_df) == "CC_filename"] <- "GO_id"
+  
+  # Reshape the dataframe from long format to wide format
+  CC_result_df <- CC_result_df %>% pivot_wider(names_from = GO_id, values_from = ClosenessCentrality)
+  
+  # Store all results in a data frame
+  results_data_frames_CC[[CC_filename]] <- CC_result_df
+  
+}
+
+```
+
+
+```{r}
+## Save modified node tables of the interaction network
+
+
+# Specify the folder path where you want to save the TSV files
+save_folderpath_CC <- "local_classic_results/ClosenessCentrality_tables_GO/local_classic_positive_genesetsCC"
+
+# Loop over the dataframes
+for (CC_term_name in names(results_data_frames_CC)) {
+  CC_df <- results_data_frames_CC[[CC_term_name]]
+  CC_filename <- paste0(CC_term_name)  # Generate the filename
+  CC_filepath <- file.path(save_folderpath_CC, CC_filename)  # Create the full filepath
+  write.table(CC_df, CC_filepath, sep = "\t", row.names = TRUE, col.names = TRUE, quote=FALSE)  # Save as TSV
+}
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+```
+
+
+
+
+
+# MF Files
+```{r}
+# Initialize a list to store the data frames
+results_data_frames_MF <- list()
+
+
+# Loop over the file names
+for (MF_filename in MF_filenames) {
+  # Construct the file path
+  MF_filepath <- file.path(MF_folderpath, MF_filename)
+  
+  # Read the contents of the file
+  MF_filecontents <- read.table(MF_filepath, header = TRUE)
+
+  # Select specific columns to create a new dataframe
+  MF_result_df <- MF_filecontents[, c("hgnc_symbol", "ClosenessCentrality")]
+  
+  # Add a new column with the filename (Remove ".tsv" format)
+  MF_result_df$MF_filename <- gsub("\\.tsv$", "", MF_filename)
+  
+  # Re-format the 'filename' column
+  MF_result_df$MF_filename <- gsub("_", ":", MF_result_df$MF_filename)
+  
+  # Rename the column of GO id
+  colnames(MF_result_df)[colnames(MF_result_df) == "MF_filename"] <- "GO_id"
+  
+  # Reshape the dataframe from long format to wide format
+  MF_result_df <- MF_result_df %>% pivot_wider(names_from = GO_id, values_from = ClosenessCentrality)
+  
+  # Store all results in a data frame
+  results_data_frames_MF[[MF_filename]] <- MF_result_df
+  
+}
+
+```
+
+
+```{r}
+## Save modified node tables of the interaction network
+
+
+# Specify the folder path where you want to save the TSV files
+save_folderpath_MF <- "local_classic_results/ClosenessCentrality_tables_GO/local_classic_positive_genesetsMF"
+
+# Loop over the dataframes
+for (MF_term_name in names(results_data_frames_MF)) {
+  MF_df <- results_data_frames_MF[[MF_term_name]]
+  MF_filename <- paste0(MF_term_name)  # Generate the filename
+  MF_filepath <- file.path(save_folderpath_MF, MF_filename)  # Create the full filepath
+  write.table(MF_df, MF_filepath, sep = "\t", row.names = TRUE, col.names = TRUE, quote=FALSE)  # Save as TSV
+}
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+```
+
+
+
+
+
+# BP Files
+```{r}
+# Initialize a list to store the data frames
+results_data_frames_BP <- list()
+
+
+# Loop over the file names
+for (BP_filename in BP_filenames) {
+  # Construct the file path
+  BP_filepath <- file.path(BP_folderpath, BP_filename)
+  
+  # Read the contents of the file
+  BP_filecontents <- read.table(BP_filepath, header = TRUE)
+
+  # Select specific columns to create a new dataframe
+  BP_result_df <- BP_filecontents[, c("hgnc_symbol", "ClosenessCentrality")]
+  
+  # Add a new column with the filename (Remove ".tsv" format)
+  BP_result_df$BP_filename <- gsub("\\.tsv$", "", BP_filename)
+  
+  # Re-format the 'filename' column
+  BP_result_df$BP_filename <- gsub("_", ":", BP_result_df$BP_filename)
+  
+  # Rename the column of GO id
+  colnames(BP_result_df)[colnames(BP_result_df) == "BP_filename"] <- "GO_id"
+  
+  # Reshape the dataframe from long format to wide format
+  BP_result_df <- BP_result_df %>% pivot_wider(names_from = GO_id, values_from = ClosenessCentrality)
+  
+  # Store all results in a data frame
+  results_data_frames_BP[[BP_filename]] <- BP_result_df
+  
+}
+
+```
+
+
+```{r}
+## Save modified node tables of the interaction network
+
+
+# Specify the folder path where you want to save the TSV files
+save_folderpath_BP <- "local_classic_results/ClosenessCentrality_tables_GO/local_classic_positive_genesetsBP"
+
+# Loop over the dataframes
+for (BP_term_name in names(results_data_frames_BP)) {
+  BP_df <- results_data_frames_BP[[BP_term_name]]
+  BP_filename <- paste0(BP_term_name)  # Generate the filename
+  BP_filepath <- file.path(save_folderpath_BP, BP_filename)  # Create the full filepath
+  write.table(BP_df, BP_filepath, sep = "\t", row.names = TRUE, col.names = TRUE, quote=FALSE)  # Save as TSV
+}
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+```
+
+

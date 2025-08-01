@@ -1,0 +1,402 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+Set working directory
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = "/Users/anb/Documents/CMEB-Lab/Projects/ML-DRG-PDAC-2025/pdac_feature_generation")
+```
+
+
+```{r}
+library(dplyr)
+library(readr)
+library(STRINGdb) 
+
+#how to install R package "STRINGdb":
+#install.packages('BiocManager')
+#library(BiocManager)
+#BiocManager::install('STRINGdb')
+
+```
+
+# CLASSIC
+## ALL #
+
+```{r}
+folderpath <- "local_classic_results/modified_node_tables_msigdb/local_classic_all_genesets"
+
+```
+
+
+```{r}
+# Get the list of file names in the folder
+filenames <- list.files(folderpath)
+
+```
+
+
+Appending the gene symbol column into the node tables
+
+```{r}
+# Initialize a list to store the data frames
+results_data_frames <- list()
+
+
+# Loop over the file names
+for (filename in filenames) {
+  # Construct the file path
+  filepath <- file.path(folderpath, filename)
+  
+  # Read the contents of the file
+  filecontents <- read.table(filepath, header = TRUE)
+  
+  # Replace 0 with 0.001
+  filecontents$BetweennessCentrality[filecontents$BetweennessCentrality == 0] <- 0.001
+  filecontents$ClosenessCentrality[filecontents$ClosenessCentrality == 0] <- 0.001
+  
+  # Store all results in a data frame
+  results_data_frames[[filename]] <- filecontents
+  
+  
+}
+
+```
+
+
+```{r}
+## Save modified node tables of the interaction network
+
+
+# Specify the folder path where you want to save the TSV files
+save_folderpath <- "local_classic_results/replace_zeros_msigdb/local_classic_all_genesets"
+
+# Loop over the dataframes
+for (term_name in names(results_data_frames)) {
+  df <- results_data_frames[[term_name]]
+  filename <- paste0(term_name)  # Generate the filename
+  filepath <- file.path(save_folderpath, filename)  # Create the full filepath
+  write.table(df, filepath, sep = "\t", row.names = TRUE, col.names = TRUE, quote=FALSE)  # Save as TSV
+}
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+```
+
+
+## NDAGs #
+
+```{r}
+folderpath <- "local_classic_results/modified_node_tables_msigdb/local_classic_negative_genesets"
+
+```
+
+
+```{r}
+# Get the list of file names in the folder
+filenames <- list.files(folderpath)
+
+```
+
+
+Appending the gene symbol column into the node tables
+
+```{r}
+# Initialize a list to store the data frames
+results_data_frames <- list()
+
+
+# Loop over the file names
+for (filename in filenames) {
+  # Construct the file path
+  filepath <- file.path(folderpath, filename)
+  
+  # Read the contents of the file
+  filecontents <- read.table(filepath, header = TRUE)
+  
+  # Replace 0 with 0.001
+  filecontents$BetweennessCentrality[filecontents$BetweennessCentrality == 0] <- 0.001
+  filecontents$ClosenessCentrality[filecontents$ClosenessCentrality == 0] <- 0.001
+  
+  # Store all results in a data frame
+  results_data_frames[[filename]] <- filecontents
+  
+  
+}
+
+```
+
+
+```{r}
+## Save modified node tables of the interaction network
+
+
+# Specify the folder path where you want to save the TSV files
+save_folderpath <- "local_classic_results/replace_zeros_msigdb/local_classic_negative_genesets"
+
+# Loop over the dataframes
+for (term_name in names(results_data_frames)) {
+  df <- results_data_frames[[term_name]]
+  filename <- paste0(term_name)  # Generate the filename
+  filepath <- file.path(save_folderpath, filename)  # Create the full filepath
+  write.table(df, filepath, sep = "\t", row.names = TRUE, col.names = TRUE, quote=FALSE)  # Save as TSV
+}
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+```
+
+
+## DAGs ##
+
+
+```{r}
+folderpath <- "local_classic_results/modified_node_tables_msigdb/local_classic_positive_genesets"
+
+```
+
+
+```{r}
+# Get the list of file names in the folder
+filenames <- list.files(folderpath)
+
+```
+
+
+Appending the gene symbol column into the node tables
+
+```{r}
+# Initialize a list to store the data frames
+results_data_frames <- list()
+
+
+# Loop over the file names
+for (filename in filenames) {
+  # Construct the file path
+  filepath <- file.path(folderpath, filename)
+  
+  # Read the contents of the file
+  filecontents <- read.table(filepath, header = TRUE)
+  
+  # Replace 0 with 0.001
+  filecontents$BetweennessCentrality[filecontents$BetweennessCentrality == 0] <- 0.001
+  filecontents$ClosenessCentrality[filecontents$ClosenessCentrality == 0] <- 0.001
+  
+  # Store all results in a data frame
+  results_data_frames[[filename]] <- filecontents
+  
+  
+}
+
+```
+
+
+```{r}
+## Save modified node tables of the interaction network
+
+
+# Specify the folder path where you want to save the TSV files
+save_folderpath <- "local_classic_results/replace_zeros_msigdb/local_classic_positive_genesets"
+
+# Loop over the dataframes
+for (term_name in names(results_data_frames)) {
+  df <- results_data_frames[[term_name]]
+  filename <- paste0(term_name)  # Generate the filename
+  filepath <- file.path(save_folderpath, filename)  # Create the full filepath
+  write.table(df, filepath, sep = "\t", row.names = TRUE, col.names = TRUE, quote=FALSE)  # Save as TSV
+}
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+```
+
+
+
+# basal
+## ALL #
+
+```{r}
+folderpath <- "local_basal_results/modified_node_tables_msigdb/local_basal_all_genesets"
+
+```
+
+
+```{r}
+# Get the list of file names in the folder
+filenames <- list.files(folderpath)
+
+```
+
+
+Appending the gene symbol column into the node tables
+
+```{r}
+# Initialize a list to store the data frames
+results_data_frames <- list()
+
+
+# Loop over the file names
+for (filename in filenames) {
+  # Construct the file path
+  filepath <- file.path(folderpath, filename)
+  
+  # Read the contents of the file
+  filecontents <- read.table(filepath, header = TRUE)
+  
+  # Replace 0 with 0.001
+  filecontents$BetweennessCentrality[filecontents$BetweennessCentrality == 0] <- 0.001
+  filecontents$ClosenessCentrality[filecontents$ClosenessCentrality == 0] <- 0.001
+  
+  # Store all results in a data frame
+  results_data_frames[[filename]] <- filecontents
+  
+  
+}
+
+```
+
+
+```{r}
+## Save modified node tables of the interaction network
+
+
+# Specify the folder path where you want to save the TSV files
+save_folderpath <- "local_basal_results/replace_zeros_msigdb/local_basal_all_genesets"
+
+# Loop over the dataframes
+for (term_name in names(results_data_frames)) {
+  df <- results_data_frames[[term_name]]
+  filename <- paste0(term_name)  # Generate the filename
+  filepath <- file.path(save_folderpath, filename)  # Create the full filepath
+  write.table(df, filepath, sep = "\t", row.names = TRUE, col.names = TRUE, quote=FALSE)  # Save as TSV
+}
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+```
+
+
+## NDAGs #
+
+```{r}
+folderpath <- "local_basal_results/modified_node_tables_msigdb/local_basal_negative_genesets"
+
+```
+
+
+```{r}
+# Get the list of file names in the folder
+filenames <- list.files(folderpath)
+
+```
+
+
+Appending the gene symbol column into the node tables
+
+```{r}
+# Initialize a list to store the data frames
+results_data_frames <- list()
+
+
+# Loop over the file names
+for (filename in filenames) {
+  # Construct the file path
+  filepath <- file.path(folderpath, filename)
+  
+  # Read the contents of the file
+  filecontents <- read.table(filepath, header = TRUE)
+  
+  # Replace 0 with 0.001
+  filecontents$BetweennessCentrality[filecontents$BetweennessCentrality == 0] <- 0.001
+  filecontents$ClosenessCentrality[filecontents$ClosenessCentrality == 0] <- 0.001
+  
+  # Store all results in a data frame
+  results_data_frames[[filename]] <- filecontents
+  
+  
+}
+
+```
+
+
+```{r}
+## Save modified node tables of the interaction network
+
+
+# Specify the folder path where you want to save the TSV files
+save_folderpath <- "local_basal_results/replace_zeros_msigdb/local_basal_negative_genesets"
+
+# Loop over the dataframes
+for (term_name in names(results_data_frames)) {
+  df <- results_data_frames[[term_name]]
+  filename <- paste0(term_name)  # Generate the filename
+  filepath <- file.path(save_folderpath, filename)  # Create the full filepath
+  write.table(df, filepath, sep = "\t", row.names = TRUE, col.names = TRUE, quote=FALSE)  # Save as TSV
+}
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+```
+
+
+## DAGs ##
+
+
+```{r}
+folderpath <- "local_basal_results/modified_node_tables_msigdb/local_basal_positive_genesets"
+
+```
+
+
+```{r}
+# Get the list of file names in the folder
+filenames <- list.files(folderpath)
+
+```
+
+
+Appending the gene symbol column into the node tables
+
+```{r}
+# Initialize a list to store the data frames
+results_data_frames <- list()
+
+
+# Loop over the file names
+for (filename in filenames) {
+  # Construct the file path
+  filepath <- file.path(folderpath, filename)
+  
+  # Read the contents of the file
+  filecontents <- read.table(filepath, header = TRUE)
+  
+  # Replace 0 with 0.001
+  filecontents$BetweennessCentrality[filecontents$BetweennessCentrality == 0] <- 0.001
+  filecontents$ClosenessCentrality[filecontents$ClosenessCentrality == 0] <- 0.001
+  
+  # Store all results in a data frame
+  results_data_frames[[filename]] <- filecontents
+  
+  
+}
+
+```
+
+
+```{r}
+## Save modified node tables of the interaction network
+
+
+# Specify the folder path where you want to save the TSV files
+save_folderpath <- "local_basal_results/replace_zeros_msigdb/local_basal_positive_genesets"
+
+# Loop over the dataframes
+for (term_name in names(results_data_frames)) {
+  df <- results_data_frames[[term_name]]
+  filename <- paste0(term_name)  # Generate the filename
+  filepath <- file.path(save_folderpath, filename)  # Create the full filepath
+  write.table(df, filepath, sep = "\t", row.names = TRUE, col.names = TRUE, quote=FALSE)  # Save as TSV
+}
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+```
+
+
+

@@ -1,0 +1,897 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+
+```{r}
+library(dplyr)
+library(readr)
+library(RCy3)
+
+#how to install R package "RCy3":
+#library(BiocManager)
+#BiocManager::install('RCy3')
+```
+
+
+```{r}
+#Connect to Cytoscape (must first download Cytoscape from https://cytoscape.org/download.html)
+cytoscapePing()
+```
+
+Set working directory
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = "/Users/anb/Documents/CMEB-Lab/Projects/ML-DRG-PDAC-2025/pdac_feature_generation")
+```
+
+
+## ALL ##
+
+```{r}
+CC_folderpath <- "local_classic_results/get_interaction_network_GO/local_classic_all_genesetsCC"
+```
+
+
+```{r}
+# Get the list of file names in the folder
+CC_filenames <- list.files(CC_folderpath)
+```
+
+
+Get Analysis results of network from Cytoscape
+CC Files
+```{r}
+# Initialize a list to store the data frames
+node_table_frames_CC <- list()
+analyze_data_frames_CC <- list()
+
+# Loop over the file names
+for (CC_filename in CC_filenames) {
+  # Construct the file path
+  CC_filepath <- file.path(CC_folderpath, CC_filename)
+  
+  # Read the contents of the file
+  CC_filecontents <- read.delim(CC_filepath, header = TRUE)
+  
+  # Perform operations on the file contents
+  # Select specific columns to create a new dataframe
+  network_df_CC <- CC_filecontents[, c("stringId_A", "stringId_B", "score")]
+    
+  # Rename Column 1 and Column 2 to select columns as source and target
+  if (nrow(network_df_CC) > 0) {
+    colnames(network_df_CC)[1:2] <- c("source", "target")
+  }
+    
+  # Creating network in Cytoscape
+  if (nrow(network_df_CC) > 0) {
+    createNetworkFromDataFrames(edges = network_df_CC)
+      
+    if (getNodeCount() >= 4) {
+      # Get analyze network results
+      analyze_data_CC <- analyzeNetwork(directed = FALSE)
+        
+      # Store analyze network results in a data frame
+      analyze_data_frames_CC[[CC_filename]] <- analyze_data_CC
+        
+      # Get node table
+      node_table_CC <- getTableColumns(table = "node", columns = NULL, namespace = "default", network = NULL)
+        
+      # Store node tables in a data frame
+      node_table_frames_CC[[CC_filename]] <- node_table_CC
+        
+    }
+  }
+  
+}
+```
+
+
+```{r}
+##Save Analyze Data of Network
+
+# Specify the folder path where you want to save the TSV files
+save_analyze_folderpath_CC <- "local_classic_results/analyze_network_GO/local_classic_all_genesetsCC"
+
+# Loop over the dataframes
+for (CC_term_name in names(analyze_data_frames_CC)) {
+  CC_df <- analyze_data_frames_CC[[CC_term_name]]
+  CC_filename <- paste0(CC_term_name)  # Generate the filename
+  CC_filepath <- file.path(save_analyze_folderpath_CC, CC_filename)  # Create the full filepath
+  write.table(CC_df, CC_filepath, sep = "\t", row.names = TRUE, col.names = TRUE, quote=FALSE)  # Save as TSV
+}
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+```
+
+
+```{r}
+##Save Node Tables
+
+# Specify the folder path where you want to save the TSV files
+save_folderpath_CC <- "local_classic_results/node_tables_GO/local_classic_all_genesetsCC"
+
+# Loop over the dataframes
+for (CC_term_name in names(node_table_frames_CC)) {
+  CC_df <- node_table_frames_CC[[CC_term_name]]
+  CC_filename <- paste0(CC_term_name)  # Generate the filename
+  CC_filepath <- file.path(save_folderpath_CC, CC_filename)  # Create the full filepath
+  write.table(CC_df, CC_filepath, sep = "\t", row.names = TRUE, col.names = TRUE, quote=FALSE)  # Save as TSV
+}
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+
+```
+
+CLEAR ENVIRONMENT
+
+
+# MF Files
+
+
+
+```{r}
+#Connect to Cytoscape (must first download Cytoscape from https://cytoscape.org/download.html)
+cytoscapePing()
+```
+
+
+
+```{r}
+MF_folderpath <- "local_classic_results/get_interaction_network_GO/local_classic_all_genesetsMF"
+MF_filenames <- list.files(MF_folderpath)
+```
+
+
+```{r}
+# Initialize a list to store the data frames
+node_table_frames_MF <- list()
+analyze_data_frames_MF <- list()
+
+# Loop over the file names
+for (MF_filename in MF_filenames) {
+  # Construct the file path
+  MF_filepath <- file.path(MF_folderpath, MF_filename)
+  
+  # Read the contents of the file
+  MF_filecontents <- read.delim(MF_filepath, header = TRUE)
+  
+  # Perform operations on the file contents
+  # Select specific columns to create a new dataframe
+  network_df_MF <- MF_filecontents[, c("stringId_A", "stringId_B", "score")]
+    
+  # Rename Column 1 and Column 2 to select columns as source and target
+  if (nrow(network_df_MF) > 0) {
+    colnames(network_df_MF)[1:2] <- c("source", "target")
+  }
+    
+  # Creating network in Cytoscape
+  if (nrow(network_df_MF) > 0) {
+    createNetworkFromDataFrames(edges = network_df_MF)
+      
+    if (getNodeCount() >= 4) {
+      # Get analyze network results
+      analyze_data_MF <- analyzeNetwork(directed = FALSE)
+        
+      # Store analyze network results in a data frame
+      analyze_data_frames_MF[[MF_filename]] <- analyze_data_MF
+        
+      # Get node table
+      node_table_MF <- getTableColumns(table = "node", columns = NULL, namespace = "default", network = NULL)
+        
+      # Store node tables in a data frame
+      node_table_frames_MF[[MF_filename]] <- node_table_MF
+        
+    }
+  }
+  
+}
+```
+
+
+```{r}
+##Save Analyze Data of Network
+
+# Specify the folder path where you want to save the TSV files
+save_analyze_folderpath_MF <- "local_classic_results/analyze_network_GO/local_classic_all_genesetsMF"
+
+# Loop over the dataframes
+for (MF_term_name in names(analyze_data_frames_MF)) {
+  MF_df <- analyze_data_frames_MF[[MF_term_name]]
+  MF_filename <- paste0(MF_term_name)  # Generate the filename
+  MF_filepath <- file.path(save_analyze_folderpath_MF, MF_filename)  # Create the full filepath
+  write.table(MF_df, MF_filepath, sep = "\t", row.names = TRUE, col.names = TRUE, quote=FALSE)  # Save as TSV
+}
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+
+
+```
+
+
+```{r}
+##Save Node Tables
+
+# Specify the folder path where you want to save the TSV files
+save_folderpath_MF <- "local_classic_results/node_tables_GO/local_classic_all_genesetsMF"
+
+# Loop over the dataframes
+for (MF_term_name in names(node_table_frames_MF)) {
+  MF_df <- node_table_frames_MF[[MF_term_name]]
+  MF_filename <- paste0(MF_term_name)  # Generate the filename
+  MF_filepath <- file.path(save_folderpath_MF, MF_filename)  # Create the full filepath
+  write.table(MF_df, MF_filepath, sep = "\t", row.names = TRUE, col.names = TRUE, quote=FALSE)  # Save as TSV
+}
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+
+
+```
+
+
+
+#BP Files
+
+
+```{r}
+#Connect to Cytoscape (must first download Cytoscape from https://cytoscape.org/download.html)
+cytoscapePing()
+```
+
+
+
+```{r}
+BP_folderpath <- "local_classic_results/get_interaction_network_GO/local_classic_all_genesetsBP"
+BP_filenames <- list.files(BP_folderpath)
+```
+
+```{r}
+# Initialize a list to store the data frames
+node_table_frames_BP <- list()
+analyze_data_frames_BP <- list()
+
+# Loop over the file names
+for (BP_filename in BP_filenames) {
+  # Construct the file path
+  BP_filepath <- file.path(BP_folderpath, BP_filename)
+  
+  # Read the contents of the file
+  BP_filecontents <- read.delim(BP_filepath, header = TRUE)
+  
+  # Perform operations on the file contents
+  # Select specific columns to create a new dataframe
+  network_df_BP <- BP_filecontents[, c("stringId_A", "stringId_B", "score")]
+    
+  # Rename Column 1 and Column 2 to select columns as source and target
+  if (nrow(network_df_BP) > 0) {
+    colnames(network_df_BP)[1:2] <- c("source", "target")
+  }
+    
+  # Creating network in Cytoscape
+  if (nrow(network_df_BP) > 0) {
+    createNetworkFromDataFrames(edges = network_df_BP)
+      
+    if (getNodeCount() >= 4) {
+      # Get analyze network results
+      analyze_data_BP <- analyzeNetwork(directed = FALSE)
+        
+      # Store analyze network results in a data frame
+      analyze_data_frames_BP[[BP_filename]] <- analyze_data_BP
+        
+      # Get node table
+      node_table_BP <- getTableColumns(table = "node", columns = NULL, namespace = "default", network = NULL)
+        
+      # Store node tables in a data frame
+      node_table_frames_BP[[BP_filename]] <- node_table_BP
+        
+    }
+  }
+  
+}
+```
+
+
+```{r}
+##Save Analyze Data of Network
+
+# Specify the folder path where you want to save the TSV files
+save_analyze_folderpath_BP <- "local_classic_results/analyze_network_GO/local_classic_all_genesetsBP"
+
+# Loop over the dataframes
+for (BP_term_name in names(analyze_data_frames_BP)) {
+  BP_df <- analyze_data_frames_BP[[BP_term_name]]
+  BP_filename <- paste0(BP_term_name)  # Generate the filename
+  BP_filepath <- file.path(save_analyze_folderpath_BP, BP_filename)  # Create the full filepath
+  write.table(BP_df, BP_filepath, sep = "\t", row.names = TRUE, col.names = TRUE, quote=FALSE)  # Save as TSV
+}
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+
+```
+
+
+```{r}
+##Save Node Tables
+
+# Specify the folder path where you want to save the TSV files
+save_folderpath_BP <- "local_classic_results/node_tables_GO/local_classic_all_genesetsBP"
+
+# Loop over the dataframes
+for (BP_term_name in names(node_table_frames_BP)) {
+  BP_df <- node_table_frames_BP[[BP_term_name]]
+  BP_filename <- paste0(BP_term_name)  # Generate the filename
+  BP_filepath <- file.path(save_folderpath_BP, BP_filename)  # Create the full filepath
+  write.table(BP_df, BP_filepath, sep = "\t", row.names = TRUE, col.names = TRUE, quote=FALSE)  # Save as TSV
+}
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+```
+
+
+### NDAGs ###
+
+
+```{r}
+#Connect to Cytoscape (must first download Cytoscape from https://cytoscape.org/download.html)
+cytoscapePing()
+```
+
+
+
+```{r}
+CC_folderpath <- "local_classic_results/get_interaction_network_GO/local_classic_negative_genesetsCC"
+MF_folderpath <- "local_classic_results/get_interaction_network_GO/local_classic_negative_genesetsMF"
+BP_folderpath <- "local_classic_results/get_interaction_network_GO/local_classic_negative_genesetsBP"
+```
+
+
+```{r}
+# Get the list of file names in the folder
+CC_filenames <- list.files(CC_folderpath)
+MF_filenames <- list.files(MF_folderpath)
+BP_filenames <- list.files(BP_folderpath)
+```
+
+
+# Get Analysis results of network from Cytoscape
+# CC Files
+```{r}
+# Initialize a list to store the data frames
+node_table_frames_CC <- list()
+analyze_data_frames_CC <- list()
+
+# Loop over the file names
+for (CC_filename in CC_filenames) {
+  # Construct the file path
+  CC_filepath <- file.path(CC_folderpath, CC_filename)
+  
+  # Read the contents of the file
+  CC_filecontents <- read.delim(CC_filepath, header = TRUE)
+  
+  # Perform operations on the file contents
+  # Select specific columns to create a new dataframe
+  network_df_CC <- CC_filecontents[, c("stringId_A", "stringId_B", "score")]
+    
+  # Rename Column 1 and Column 2 to select columns as source and target
+  if (nrow(network_df_CC) > 0) {
+    colnames(network_df_CC)[1:2] <- c("source", "target")
+  }
+    
+  # Creating network in Cytoscape
+  if (nrow(network_df_CC) > 0) {
+    createNetworkFromDataFrames(edges = network_df_CC)
+      
+    if (getNodeCount() >= 4) {
+      # Get analyze network results
+      analyze_data_CC <- analyzeNetwork(directed = FALSE)
+        
+      # Store analyze network results in a data frame
+      analyze_data_frames_CC[[CC_filename]] <- analyze_data_CC
+        
+      # Get node table
+      node_table_CC <- getTableColumns(table = "node", columns = NULL, namespace = "default", network = NULL)
+        
+      # Store node tables in a data frame
+      node_table_frames_CC[[CC_filename]] <- node_table_CC
+        
+    }
+  }
+  
+}
+```
+
+
+```{r}
+##Save Analyze Data of Network
+
+# Specify the folder path where you want to save the TSV files
+save_analyze_folderpath_CC <- "local_classic_results/analyze_network_GO/local_classic_negative_genesetsCC"
+
+# Loop over the dataframes
+for (CC_term_name in names(analyze_data_frames_CC)) {
+  CC_df <- analyze_data_frames_CC[[CC_term_name]]
+  CC_filename <- paste0(CC_term_name)  # Generate the filename
+  CC_filepath <- file.path(save_analyze_folderpath_CC, CC_filename)  # Create the full filepath
+  write.table(CC_df, CC_filepath, sep = "\t", row.names = TRUE, col.names = TRUE, quote=FALSE)  # Save as TSV
+}
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+```
+
+
+```{r}
+##Save Node Tables
+
+# Specify the folder path where you want to save the TSV files
+save_folderpath_CC <- "local_classic_results/node_tables_GO/local_classic_negative_genesetsCC"
+
+# Loop over the dataframes
+for (CC_term_name in names(node_table_frames_CC)) {
+  CC_df <- node_table_frames_CC[[CC_term_name]]
+  CC_filename <- paste0(CC_term_name)  # Generate the filename
+  CC_filepath <- file.path(save_folderpath_CC, CC_filename)  # Create the full filepath
+  write.table(CC_df, CC_filepath, sep = "\t", row.names = TRUE, col.names = TRUE, quote=FALSE)  # Save as TSV
+}
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+
+```
+
+
+#MF Files
+```{r}
+# Initialize a list to store the data frames
+node_table_frames_MF <- list()
+analyze_data_frames_MF <- list()
+
+# Loop over the file names
+for (MF_filename in MF_filenames) {
+  # Construct the file path
+  MF_filepath <- file.path(MF_folderpath, MF_filename)
+  
+  # Read the contents of the file
+  MF_filecontents <- read.delim(MF_filepath, header = TRUE)
+  
+  # Perform operations on the file contents
+  # Select specific columns to create a new dataframe
+  network_df_MF <- MF_filecontents[, c("stringId_A", "stringId_B", "score")]
+    
+  # Rename Column 1 and Column 2 to select columns as source and target
+  if (nrow(network_df_MF) > 0) {
+    colnames(network_df_MF)[1:2] <- c("source", "target")
+  }
+    
+  # Creating network in Cytoscape
+  if (nrow(network_df_MF) > 0) {
+    createNetworkFromDataFrames(edges = network_df_MF)
+      
+    if (getNodeCount() >= 4) {
+      # Get analyze network results
+      analyze_data_MF <- analyzeNetwork(directed = FALSE)
+        
+      # Store analyze network results in a data frame
+      analyze_data_frames_MF[[MF_filename]] <- analyze_data_MF
+        
+      # Get node table
+      node_table_MF <- getTableColumns(table = "node", columns = NULL, namespace = "default", network = NULL)
+        
+      # Store node tables in a data frame
+      node_table_frames_MF[[MF_filename]] <- node_table_MF
+        
+    }
+  }
+  
+}
+```
+
+
+```{r}
+##Save Analyze Data of Network
+
+# Specify the folder path where you want to save the TSV files
+save_analyze_folderpath_MF <- "local_classic_results/analyze_network_GO/local_classic_negative_genesetsMF"
+
+# Loop over the dataframes
+for (MF_term_name in names(analyze_data_frames_MF)) {
+  MF_df <- analyze_data_frames_MF[[MF_term_name]]
+  MF_filename <- paste0(MF_term_name)  # Generate the filename
+  MF_filepath <- file.path(save_analyze_folderpath_MF, MF_filename)  # Create the full filepath
+  write.table(MF_df, MF_filepath, sep = "\t", row.names = TRUE, col.names = TRUE, quote=FALSE)  # Save as TSV
+}
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+
+
+```
+
+
+```{r}
+##Save Node Tables
+
+# Specify the folder path where you want to save the TSV files
+save_folderpath_MF <- "local_classic_results/node_tables_GO/local_classic_negative_genesetsMF"
+
+# Loop over the dataframes
+for (MF_term_name in names(node_table_frames_MF)) {
+  MF_df <- node_table_frames_MF[[MF_term_name]]
+  MF_filename <- paste0(MF_term_name)  # Generate the filename
+  MF_filepath <- file.path(save_folderpath_MF, MF_filename)  # Create the full filepath
+  write.table(MF_df, MF_filepath, sep = "\t", row.names = TRUE, col.names = TRUE, quote=FALSE)  # Save as TSV
+}
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+
+
+```
+
+
+
+#BP Files
+```{r}
+# Initialize a list to store the data frames
+node_table_frames_BP <- list()
+analyze_data_frames_BP <- list()
+
+# Loop over the file names
+for (BP_filename in BP_filenames) {
+  # Construct the file path
+  BP_filepath <- file.path(BP_folderpath, BP_filename)
+  
+  # Read the contents of the file
+  BP_filecontents <- read.delim(BP_filepath, header = TRUE)
+  
+  # Perform operations on the file contents
+  # Select specific columns to create a new dataframe
+  network_df_BP <- BP_filecontents[, c("stringId_A", "stringId_B", "score")]
+    
+  # Rename Column 1 and Column 2 to select columns as source and target
+  if (nrow(network_df_BP) > 0) {
+    colnames(network_df_BP)[1:2] <- c("source", "target")
+  }
+    
+  # Creating network in Cytoscape
+  if (nrow(network_df_BP) > 0) {
+    createNetworkFromDataFrames(edges = network_df_BP)
+      
+    if (getNodeCount() >= 4) {
+      # Get analyze network results
+      analyze_data_BP <- analyzeNetwork(directed = FALSE)
+        
+      # Store analyze network results in a data frame
+      analyze_data_frames_BP[[BP_filename]] <- analyze_data_BP
+        
+      # Get node table
+      node_table_BP <- getTableColumns(table = "node", columns = NULL, namespace = "default", network = NULL)
+        
+      # Store node tables in a data frame
+      node_table_frames_BP[[BP_filename]] <- node_table_BP
+        
+    }
+  }
+  
+}
+```
+
+
+```{r}
+##Save Analyze Data of Network
+
+# Specify the folder path where you want to save the TSV files
+save_analyze_folderpath_BP <- "local_classic_results/analyze_network_GO/local_classic_negative_genesetsBP"
+
+# Loop over the dataframes
+for (BP_term_name in names(analyze_data_frames_BP)) {
+  BP_df <- analyze_data_frames_BP[[BP_term_name]]
+  BP_filename <- paste0(BP_term_name)  # Generate the filename
+  BP_filepath <- file.path(save_analyze_folderpath_BP, BP_filename)  # Create the full filepath
+  write.table(BP_df, BP_filepath, sep = "\t", row.names = TRUE, col.names = TRUE, quote=FALSE)  # Save as TSV
+}
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+
+```
+
+
+```{r}
+##Save Node Tables
+
+# Specify the folder path where you want to save the TSV files
+save_folderpath_BP <- "local_classic_results/node_tables_GO/local_classic_negative_genesetsBP"
+
+# Loop over the dataframes
+for (BP_term_name in names(node_table_frames_BP)) {
+  BP_df <- node_table_frames_BP[[BP_term_name]]
+  BP_filename <- paste0(BP_term_name)  # Generate the filename
+  BP_filepath <- file.path(save_folderpath_BP, BP_filename)  # Create the full filepath
+  write.table(BP_df, BP_filepath, sep = "\t", row.names = TRUE, col.names = TRUE, quote=FALSE)  # Save as TSV
+}
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+```
+
+
+
+
+## DAGs ##
+
+
+```{r}
+#Connect to Cytoscape (must first download Cytoscape from https://cytoscape.org/download.html)
+cytoscapePing()
+```
+
+
+
+```{r}
+CC_folderpath <- "local_classic_results/get_interaction_network_GO/local_classic_positive_genesetsCC"
+MF_folderpath <- "local_classic_results/get_interaction_network_GO/local_classic_positive_genesetsMF"
+BP_folderpath <- "local_classic_results/get_interaction_network_GO/local_classic_positive_genesetsBP"
+```
+
+
+```{r}
+# Get the list of file names in the folder
+CC_filenames <- list.files(CC_folderpath)
+MF_filenames <- list.files(MF_folderpath)
+BP_filenames <- list.files(BP_folderpath)
+```
+
+
+#Get Analysis results of network from Cytoscape
+#CC Files
+```{r}
+# Initialize a list to store the data frames
+node_table_frames_CC <- list()
+analyze_data_frames_CC <- list()
+
+# Loop over the file names
+for (CC_filename in CC_filenames) {
+  # Construct the file path
+  CC_filepath <- file.path(CC_folderpath, CC_filename)
+  
+  # Read the contents of the file
+  CC_filecontents <- read.delim(CC_filepath, header = TRUE)
+  
+  # Perform operations on the file contents
+  # Select specific columns to create a new dataframe
+  network_df_CC <- CC_filecontents[, c("stringId_A", "stringId_B", "score")]
+    
+  # Rename Column 1 and Column 2 to select columns as source and target
+  if (nrow(network_df_CC) > 0) {
+    colnames(network_df_CC)[1:2] <- c("source", "target")
+  }
+    
+  # Creating network in Cytoscape
+  if (nrow(network_df_CC) > 0) {
+    createNetworkFromDataFrames(edges = network_df_CC)
+      
+    if (getNodeCount() >= 4) {
+      # Get analyze network results
+      analyze_data_CC <- analyzeNetwork(directed = FALSE)
+        
+      # Store analyze network results in a data frame
+      analyze_data_frames_CC[[CC_filename]] <- analyze_data_CC
+        
+      # Get node table
+      node_table_CC <- getTableColumns(table = "node", columns = NULL, namespace = "default", network = NULL)
+        
+      # Store node tables in a data frame
+      node_table_frames_CC[[CC_filename]] <- node_table_CC
+        
+    }
+  }
+  
+}
+```
+
+
+```{r}
+##Save Analyze Data of Network
+
+# Specify the folder path where you want to save the TSV files
+save_analyze_folderpath_CC <- "local_classic_results/analyze_network_GO/local_classic_positive_genesetsCC"
+
+# Loop over the dataframes
+for (CC_term_name in names(analyze_data_frames_CC)) {
+  CC_df <- analyze_data_frames_CC[[CC_term_name]]
+  CC_filename <- paste0(CC_term_name)  # Generate the filename
+  CC_filepath <- file.path(save_analyze_folderpath_CC, CC_filename)  # Create the full filepath
+  write.table(CC_df, CC_filepath, sep = "\t", row.names = TRUE, col.names = TRUE, quote=FALSE)  # Save as TSV
+}
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+```
+
+
+```{r}
+##Save Node Tables
+
+# Specify the folder path where you want to save the TSV files
+save_folderpath_CC <- "local_classic_results/node_tables_GO/local_classic_positive_genesetsCC"
+
+# Loop over the dataframes
+for (CC_term_name in names(node_table_frames_CC)) {
+  CC_df <- node_table_frames_CC[[CC_term_name]]
+  CC_filename <- paste0(CC_term_name)  # Generate the filename
+  CC_filepath <- file.path(save_folderpath_CC, CC_filename)  # Create the full filepath
+  write.table(CC_df, CC_filepath, sep = "\t", row.names = TRUE, col.names = TRUE, quote=FALSE)  # Save as TSV
+}
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+
+```
+
+
+#MF Files
+```{r}
+# Initialize a list to store the data frames
+node_table_frames_MF <- list()
+analyze_data_frames_MF <- list()
+
+# Loop over the file names
+for (MF_filename in MF_filenames) {
+  # Construct the file path
+  MF_filepath <- file.path(MF_folderpath, MF_filename)
+  
+  # Read the contents of the file
+  MF_filecontents <- read.delim(MF_filepath, header = TRUE)
+  
+  # Perform operations on the file contents
+  # Select specific columns to create a new dataframe
+  network_df_MF <- MF_filecontents[, c("stringId_A", "stringId_B", "score")]
+    
+  # Rename Column 1 and Column 2 to select columns as source and target
+  if (nrow(network_df_MF) > 0) {
+    colnames(network_df_MF)[1:2] <- c("source", "target")
+  }
+    
+  # Creating network in Cytoscape
+  if (nrow(network_df_MF) > 0) {
+    createNetworkFromDataFrames(edges = network_df_MF)
+      
+    if (getNodeCount() >= 4) {
+      # Get analyze network results
+      analyze_data_MF <- analyzeNetwork(directed = FALSE)
+        
+      # Store analyze network results in a data frame
+      analyze_data_frames_MF[[MF_filename]] <- analyze_data_MF
+        
+      # Get node table
+      node_table_MF <- getTableColumns(table = "node", columns = NULL, namespace = "default", network = NULL)
+        
+      # Store node tables in a data frame
+      node_table_frames_MF[[MF_filename]] <- node_table_MF
+        
+    }
+  }
+  
+}
+```
+
+
+```{r}
+##Save Analyze Data of Network
+
+# Specify the folder path where you want to save the TSV files
+save_analyze_folderpath_MF <- "local_classic_results/analyze_network_GO/local_classic_positive_genesetsMF"
+
+# Loop over the dataframes
+for (MF_term_name in names(analyze_data_frames_MF)) {
+  MF_df <- analyze_data_frames_MF[[MF_term_name]]
+  MF_filename <- paste0(MF_term_name)  # Generate the filename
+  MF_filepath <- file.path(save_analyze_folderpath_MF, MF_filename)  # Create the full filepath
+  write.table(MF_df, MF_filepath, sep = "\t", row.names = TRUE, col.names = TRUE, quote=FALSE)  # Save as TSV
+}
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+
+
+```
+
+
+```{r}
+##Save Node Tables
+
+# Specify the folder path where you want to save the TSV files
+save_folderpath_MF <- "local_classic_results/node_tables_GO/local_classic_positive_genesetsMF"
+
+# Loop over the dataframes
+for (MF_term_name in names(node_table_frames_MF)) {
+  MF_df <- node_table_frames_MF[[MF_term_name]]
+  MF_filename <- paste0(MF_term_name)  # Generate the filename
+  MF_filepath <- file.path(save_folderpath_MF, MF_filename)  # Create the full filepath
+  write.table(MF_df, MF_filepath, sep = "\t", row.names = TRUE, col.names = TRUE, quote=FALSE)  # Save as TSV
+}
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+
+
+```
+
+
+
+#BP Files
+```{r}
+# Initialize a list to store the data frames
+node_table_frames_BP <- list()
+analyze_data_frames_BP <- list()
+
+# Loop over the file names
+for (BP_filename in BP_filenames) {
+  # Construct the file path
+  BP_filepath <- file.path(BP_folderpath, BP_filename)
+  
+  # Read the contents of the file
+  BP_filecontents <- read.delim(BP_filepath, header = TRUE)
+  
+  # Perform operations on the file contents
+  # Select specific columns to create a new dataframe
+  network_df_BP <- BP_filecontents[, c("stringId_A", "stringId_B", "score")]
+    
+  # Rename Column 1 and Column 2 to select columns as source and target
+  if (nrow(network_df_BP) > 0) {
+    colnames(network_df_BP)[1:2] <- c("source", "target")
+  }
+    
+  # Creating network in Cytoscape
+  if (nrow(network_df_BP) > 0) {
+    createNetworkFromDataFrames(edges = network_df_BP)
+      
+    if (getNodeCount() >= 4) {
+      # Get analyze network results
+      analyze_data_BP <- analyzeNetwork(directed = FALSE)
+        
+      # Store analyze network results in a data frame
+      analyze_data_frames_BP[[BP_filename]] <- analyze_data_BP
+        
+      # Get node table
+      node_table_BP <- getTableColumns(table = "node", columns = NULL, namespace = "default", network = NULL)
+        
+      # Store node tables in a data frame
+      node_table_frames_BP[[BP_filename]] <- node_table_BP
+        
+    }
+  }
+  
+}
+```
+
+
+```{r}
+##Save Analyze Data of Network
+
+# Specify the folder path where you want to save the TSV files
+save_analyze_folderpath_BP <- "local_classic_results/analyze_network_GO/local_classic_positive_genesetsBP"
+
+# Loop over the dataframes
+for (BP_term_name in names(analyze_data_frames_BP)) {
+  BP_df <- analyze_data_frames_BP[[BP_term_name]]
+  BP_filename <- paste0(BP_term_name)  # Generate the filename
+  BP_filepath <- file.path(save_analyze_folderpath_BP, BP_filename)  # Create the full filepath
+  write.table(BP_df, BP_filepath, sep = "\t", row.names = TRUE, col.names = TRUE, quote=FALSE)  # Save as TSV
+}
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+
+```
+
+
+```{r}
+##Save Node Tables
+
+# Specify the folder path where you want to save the TSV files
+save_folderpath_BP <- "local_classic_results/node_tables_GO/local_classic_positive_genesetsBP"
+
+# Loop over the dataframes
+for (BP_term_name in names(node_table_frames_BP)) {
+  BP_df <- node_table_frames_BP[[BP_term_name]]
+  BP_filename <- paste0(BP_term_name)  # Generate the filename
+  BP_filepath <- file.path(save_folderpath_BP, BP_filename)  # Create the full filepath
+  write.table(BP_df, BP_filepath, sep = "\t", row.names = TRUE, col.names = TRUE, quote=FALSE)  # Save as TSV
+}
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+```
+
+

@@ -1,0 +1,650 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+Set working directory
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = "/Users/anb/Documents/CMEB-Lab/Projects/ML-DRG-PDAC-2025/pdac_feature_generation")
+```
+
+
+```{r}
+library(dplyr)
+library(readr)
+library(STRINGdb) 
+library(rbioapi)
+
+```
+
+# CLASSIC
+## ALL #
+
+part1
+```{r}
+folderpath <- "local_classic_results/mapped_ids_msigdb/local_classic_all_genesets/part1"
+```
+
+
+```{r}
+# Get the list of file names in the folder
+filenames <- list.files(folderpath)
+```
+
+
+Get STRING interaction network of protein set
+
+```{r}
+# Initialize a list to store the data frames
+network_data_frames <- list()
+
+# Loop over the file names
+for (filename in filenames) {
+  # Construct the file path
+  filepath <- file.path(folderpath, filename)
+  
+  # Read the contents of the file
+  filecontents <- read.delim(filepath, header = TRUE)
+  
+  # Perform operations on the file contents
+  #get interaction network of a protein set
+  int_net <- rba_string_interactions_network(ids = filecontents$STRING_id, species = 9606)
+  
+  # Store the interaction network in a data frame
+  network_data_frames[[filename]] <- int_net
+
+  
+}
+```
+
+
+```{r}
+##Save STRING Mapped ID
+
+# Specify the folder path where you want to save the TSV files
+save_folderpath <- "local_classic_results/get_interaction_network_msigdb/local_classic_all_genesets"
+
+# Loop over the dataframes
+for (term_name in names(network_data_frames)) {
+  df <- network_data_frames[[term_name]]
+  if (nrow(df) > 0) {
+    filename <- paste0(term_name)  # Generate the filename
+    filepath <- file.path(save_folderpath, filename)  # Create the full filepath
+    write.table(df, filepath, sep = "\t", row.names = TRUE, col.names = TRUE, quote=FALSE)  # Save as TSV
+  }
+}
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+
+
+```
+
+
+
+part2
+
+```{r}
+folderpath <- "local_classic_results/mapped_ids_msigdb/local_classic_all_genesets/part2"
+```
+
+
+```{r}
+# Get the list of file names in the folder
+filenames <- list.files(folderpath)
+```
+
+
+Get STRING interaction network of protein set
+
+```{r}
+# Initialize a list to store the data frames
+network_data_frames <- list()
+
+# Loop over the file names
+for (filename in filenames) {
+  # Construct the file path
+  filepath <- file.path(folderpath, filename)
+  
+  # Read the contents of the file
+  filecontents <- read.delim(filepath, header = TRUE)
+  
+  # Perform operations on the file contents
+  #get interaction network of a protein set
+  int_net <- rba_string_interactions_network(ids = filecontents$STRING_id, species = 9606)
+  
+  # Store the interaction network in a data frame
+  network_data_frames[[filename]] <- int_net
+
+  
+}
+```
+
+
+```{r}
+##Save STRING Mapped ID
+
+# Specify the folder path where you want to save the TSV files
+save_folderpath <- "local_classic_results/get_interaction_network_msigdb/local_classic_all_genesets"
+
+# Loop over the dataframes
+for (term_name in names(network_data_frames)) {
+  df <- network_data_frames[[term_name]]
+  if (nrow(df) > 0) {
+    filename <- paste0(term_name)  # Generate the filename
+    filepath <- file.path(save_folderpath, filename)  # Create the full filepath
+    write.table(df, filepath, sep = "\t", row.names = TRUE, col.names = TRUE, quote=FALSE)  # Save as TSV
+  }
+}
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+
+
+```
+
+
+
+
+## NDAGs #
+
+```{r}
+folderpath <- "local_classic_results/mapped_ids_msigdb/local_classic_negative_genesets"
+```
+
+
+```{r}
+# Get the list of file names in the folder
+filenames <- list.files(folderpath)
+```
+
+
+Get STRING interaction network of protein set
+
+```{r}
+# Initialize a list to store the data frames
+network_data_frames <- list()
+
+# Loop over the file names
+for (filename in filenames) {
+  # Construct the file path
+  filepath <- file.path(folderpath, filename)
+  
+  # Read the contents of the file
+  filecontents <- read.delim(filepath, header = TRUE)
+  
+  # Perform operations on the file contents
+  #get interaction network of a protein set
+  int_net <- rba_string_interactions_network(ids = filecontents$STRING_id, species = 9606)
+  
+  # Store the interaction network in a data frame
+  network_data_frames[[filename]] <- int_net
+
+  
+}
+```
+
+
+```{r}
+##Save STRING Mapped ID
+
+# Specify the folder path where you want to save the TSV files
+save_folderpath <- "local_classic_results/get_interaction_network_msigdb/local_classic_negative_genesets"
+
+# Loop over the dataframes
+for (term_name in names(network_data_frames)) {
+  df <- network_data_frames[[term_name]]
+  if (nrow(df) > 0) {
+    filename <- paste0(term_name)  # Generate the filename
+    filepath <- file.path(save_folderpath, filename)  # Create the full filepath
+    write.table(df, filepath, sep = "\t", row.names = TRUE, col.names = TRUE, quote=FALSE)  # Save as TSV
+  }
+}
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+
+
+```
+
+
+
+## DAGs #
+
+```{r}
+folderpath <- "local_classic_results/mapped_ids_msigdb/local_classic_positive_genesets"
+```
+
+
+```{r}
+# Get the list of file names in the folder
+filenames <- list.files(folderpath)
+```
+
+
+Get STRING interaction network of protein set
+
+```{r}
+# Initialize a list to store the data frames
+network_data_frames <- list()
+
+# Loop over the file names
+for (filename in filenames) {
+  # Construct the file path
+  filepath <- file.path(folderpath, filename)
+  
+  # Read the contents of the file
+  filecontents <- read.delim(filepath, header = TRUE)
+  
+  # Perform operations on the file contents
+  #get interaction network of a protein set
+  int_net <- rba_string_interactions_network(ids = filecontents$STRING_id, species = 9606)
+  
+  # Store the interaction network in a data frame
+  network_data_frames[[filename]] <- int_net
+
+  
+}
+```
+
+
+```{r}
+##Save STRING Mapped ID
+
+# Specify the folder path where you want to save the TSV files
+save_folderpath <- "local_classic_results/get_interaction_network_msigdb/local_classic_positive_genesets"
+
+# Loop over the dataframes
+for (term_name in names(network_data_frames)) {
+  df <- network_data_frames[[term_name]]
+  if (nrow(df) > 0) {
+    filename <- paste0(term_name)  # Generate the filename
+    filepath <- file.path(save_folderpath, filename)  # Create the full filepath
+    write.table(df, filepath, sep = "\t", row.names = TRUE, col.names = TRUE, quote=FALSE)  # Save as TSV
+  }
+}
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+
+
+```
+
+
+
+
+
+
+
+
+# basal
+## ALL #
+
+part1
+```{r}
+folderpath <- "local_basal_results/mapped_ids_msigdb/local_basal_all_genesets/part1"
+```
+
+
+```{r}
+# Get the list of file names in the folder
+filenames <- list.files(folderpath)
+```
+
+
+Get STRING interaction network of protein set
+
+```{r}
+# Initialize a list to store the data frames
+network_data_frames <- list()
+
+# Loop over the file names
+for (filename in filenames) {
+  # Construct the file path
+  filepath <- file.path(folderpath, filename)
+  
+  # Read the contents of the file
+  filecontents <- read.delim(filepath, header = TRUE)
+  
+  # Perform operations on the file contents
+  #get interaction network of a protein set
+  int_net <- rba_string_interactions_network(ids = filecontents$STRING_id, species = 9606)
+  
+  # Store the interaction network in a data frame
+  network_data_frames[[filename]] <- int_net
+
+  
+}
+```
+
+
+```{r}
+##Save STRING Mapped ID
+
+# Specify the folder path where you want to save the TSV files
+save_folderpath <- "local_basal_results/get_interaction_network_msigdb/local_basal_all_genesets"
+
+# Loop over the dataframes
+for (term_name in names(network_data_frames)) {
+  df <- network_data_frames[[term_name]]
+  if (nrow(df) > 0) {
+    filename <- paste0(term_name)  # Generate the filename
+    filepath <- file.path(save_folderpath, filename)  # Create the full filepath
+    write.table(df, filepath, sep = "\t", row.names = TRUE, col.names = TRUE, quote=FALSE)  # Save as TSV
+  }
+}
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+
+
+```
+
+
+
+part2
+
+```{r}
+folderpath <- "local_basal_results/mapped_ids_msigdb/local_basal_all_genesets/part2"
+```
+
+
+```{r}
+# Get the list of file names in the folder
+filenames <- list.files(folderpath)
+```
+
+
+Get STRING interaction network of protein set
+
+```{r}
+# Initialize a list to store the data frames
+network_data_frames <- list()
+
+# Loop over the file names
+for (filename in filenames) {
+  # Construct the file path
+  filepath <- file.path(folderpath, filename)
+  
+  # Read the contents of the file
+  filecontents <- read.delim(filepath, header = TRUE)
+  
+  # Perform operations on the file contents
+  #get interaction network of a protein set
+  int_net <- rba_string_interactions_network(ids = filecontents$STRING_id, species = 9606)
+  
+  # Store the interaction network in a data frame
+  network_data_frames[[filename]] <- int_net
+
+  
+}
+```
+
+
+```{r}
+##Save STRING Mapped ID
+
+# Specify the folder path where you want to save the TSV files
+save_folderpath <- "local_basal_results/get_interaction_network_msigdb/local_basal_all_genesets"
+
+# Loop over the dataframes
+for (term_name in names(network_data_frames)) {
+  df <- network_data_frames[[term_name]]
+  if (nrow(df) > 0) {
+    filename <- paste0(term_name)  # Generate the filename
+    filepath <- file.path(save_folderpath, filename)  # Create the full filepath
+    write.table(df, filepath, sep = "\t", row.names = TRUE, col.names = TRUE, quote=FALSE)  # Save as TSV
+  }
+}
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+
+
+```
+
+part3
+
+```{r}
+folderpath <- "local_basal_results/mapped_ids_msigdb/local_basal_all_genesets/part3"
+```
+
+
+```{r}
+# Get the list of file names in the folder
+filenames <- list.files(folderpath)
+```
+
+
+Get STRING interaction network of protein set
+
+```{r}
+# Initialize a list to store the data frames
+network_data_frames <- list()
+
+# Loop over the file names
+for (filename in filenames) {
+  # Construct the file path
+  filepath <- file.path(folderpath, filename)
+  
+  # Read the contents of the file
+  filecontents <- read.delim(filepath, header = TRUE)
+  
+  # Perform operations on the file contents
+  #get interaction network of a protein set
+  int_net <- rba_string_interactions_network(ids = filecontents$STRING_id, species = 9606)
+  
+  # Store the interaction network in a data frame
+  network_data_frames[[filename]] <- int_net
+
+  
+}
+```
+
+
+```{r}
+##Save STRING Mapped ID
+
+# Specify the folder path where you want to save the TSV files
+save_folderpath <- "local_basal_results/get_interaction_network_msigdb/local_basal_all_genesets"
+
+# Loop over the dataframes
+for (term_name in names(network_data_frames)) {
+  df <- network_data_frames[[term_name]]
+  if (nrow(df) > 0) {
+    filename <- paste0(term_name)  # Generate the filename
+    filepath <- file.path(save_folderpath, filename)  # Create the full filepath
+    write.table(df, filepath, sep = "\t", row.names = TRUE, col.names = TRUE, quote=FALSE)  # Save as TSV
+  }
+}
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+
+
+```
+
+
+part4
+
+```{r}
+folderpath <- "local_basal_results/mapped_ids_msigdb/local_basal_all_genesets/part4"
+```
+
+
+```{r}
+# Get the list of file names in the folder
+filenames <- list.files(folderpath)
+```
+
+
+Get STRING interaction network of protein set
+
+```{r}
+# Initialize a list to store the data frames
+network_data_frames <- list()
+
+# Loop over the file names
+for (filename in filenames) {
+  # Construct the file path
+  filepath <- file.path(folderpath, filename)
+  
+  # Read the contents of the file
+  filecontents <- read.delim(filepath, header = TRUE)
+  
+  # Perform operations on the file contents
+  #get interaction network of a protein set
+  int_net <- rba_string_interactions_network(ids = filecontents$STRING_id, species = 9606)
+  
+  # Store the interaction network in a data frame
+  network_data_frames[[filename]] <- int_net
+
+  
+}
+```
+
+
+```{r}
+##Save STRING Mapped ID
+
+# Specify the folder path where you want to save the TSV files
+save_folderpath <- "local_basal_results/get_interaction_network_msigdb/local_basal_all_genesets"
+
+# Loop over the dataframes
+for (term_name in names(network_data_frames)) {
+  df <- network_data_frames[[term_name]]
+  if (nrow(df) > 0) {
+    filename <- paste0(term_name)  # Generate the filename
+    filepath <- file.path(save_folderpath, filename)  # Create the full filepath
+    write.table(df, filepath, sep = "\t", row.names = TRUE, col.names = TRUE, quote=FALSE)  # Save as TSV
+  }
+}
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+
+
+```
+
+
+## NDAGs #
+
+```{r}
+folderpath <- "local_basal_results/mapped_ids_msigdb/local_basal_negative_genesets"
+```
+
+
+```{r}
+# Get the list of file names in the folder
+filenames <- list.files(folderpath)
+```
+
+
+Get STRING interaction network of protein set
+
+```{r}
+# Initialize a list to store the data frames
+network_data_frames <- list()
+
+# Loop over the file names
+for (filename in filenames) {
+  # Construct the file path
+  filepath <- file.path(folderpath, filename)
+  
+  # Read the contents of the file
+  filecontents <- read.delim(filepath, header = TRUE)
+  
+  # Perform operations on the file contents
+  #get interaction network of a protein set
+  int_net <- rba_string_interactions_network(ids = filecontents$STRING_id, species = 9606)
+  
+  # Store the interaction network in a data frame
+  network_data_frames[[filename]] <- int_net
+
+  
+}
+```
+
+
+```{r}
+##Save STRING Mapped ID
+
+# Specify the folder path where you want to save the TSV files
+save_folderpath <- "local_basal_results/get_interaction_network_msigdb/local_basal_negative_genesets"
+
+# Loop over the dataframes
+for (term_name in names(network_data_frames)) {
+  df <- network_data_frames[[term_name]]
+  if (nrow(df) > 0) {
+    filename <- paste0(term_name)  # Generate the filename
+    filepath <- file.path(save_folderpath, filename)  # Create the full filepath
+    write.table(df, filepath, sep = "\t", row.names = TRUE, col.names = TRUE, quote=FALSE)  # Save as TSV
+  }
+}
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+
+
+```
+
+
+
+## DAGs #
+
+```{r}
+folderpath <- "local_basal_results/mapped_ids_msigdb/local_basal_positive_genesets"
+```
+
+
+```{r}
+# Get the list of file names in the folder
+filenames <- list.files(folderpath)
+```
+
+
+Get STRING interaction network of protein set
+
+```{r}
+# Initialize a list to store the data frames
+network_data_frames <- list()
+
+# Loop over the file names
+for (filename in filenames) {
+  # Construct the file path
+  filepath <- file.path(folderpath, filename)
+  
+  # Read the contents of the file
+  filecontents <- read.delim(filepath, header = TRUE)
+  
+  # Perform operations on the file contents
+  #get interaction network of a protein set
+  int_net <- rba_string_interactions_network(ids = filecontents$STRING_id, species = 9606)
+  
+  # Store the interaction network in a data frame
+  network_data_frames[[filename]] <- int_net
+
+  
+}
+```
+
+
+```{r}
+##Save STRING Mapped ID
+
+# Specify the folder path where you want to save the TSV files
+save_folderpath <- "local_basal_results/get_interaction_network_msigdb/local_basal_positive_genesets"
+
+# Loop over the dataframes
+for (term_name in names(network_data_frames)) {
+  df <- network_data_frames[[term_name]]
+  if (nrow(df) > 0) {
+    filename <- paste0(term_name)  # Generate the filename
+    filepath <- file.path(save_folderpath, filename)  # Create the full filepath
+    write.table(df, filepath, sep = "\t", row.names = TRUE, col.names = TRUE, quote=FALSE)  # Save as TSV
+  }
+}
+
+cat("Dataframes successfully saved with corresponding names as TSV files.\n")
+
+
+```
+
+
+
+
+
+
+

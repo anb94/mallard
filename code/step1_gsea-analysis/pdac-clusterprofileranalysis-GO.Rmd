@@ -1,0 +1,675 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This code is the the first step in the feature generation using DEGs from a DGE analysis.
+We perform GSEA on 3 sets of genes from the DEG analysis:
+
+1) All genes
+2) DAGs
+3) NDAGs
+
+Set working directory
+```{r, setup, include=FALSE}
+knitr::opts_knit$set(root.dir = "/Users/anb/Documents/CMEB-Lab/Projects/ML-DRG-PDAC-2025/pdac_feature_generation")
+```
+
+
+```{r}
+library(affy)
+library(limma)
+library(tibble)
+library(ggplot2)
+library(dplyr)
+library(ggrepel)
+library(readr)
+library(pheatmap)
+library(pathview)
+library(clusterProfiler)
+library(enrichplot)
+library(europepmc)
+library(ggnewscale)
+```
+
+
+```{r}
+organism <- "org.Hs.eg.db"
+library(organism, character.only = TRUE)
+```
+
+
+##### GENE SET ENRICHMENT ANALYSIS ######
+
+This code will create variables in your global environment with names based on the .tsv files in the directory specified by base_path. 
+Please ensure that the file paths are correct and the files exist at those locations. 
+If you’re still encountering issues, please provide more details about the problem.
+
+```{r}
+# Define the base file path
+base_path <- "local_classic_results/filtered-degs/"
+
+
+# Get the list of all .tsv files in the directory
+file_names <- list.files(path = base_path, pattern = "\\.tsv$")
+
+listofdataframes <- as.list(file_names)
+
+# Read the files and assign to variables named after the file names
+for (file_name in file_names) {
+  # Remove the extension (.tsv) from the file name to use as the variable name
+  var_name <- sub("\\.tsv$", "", file_name)
+  
+  # Read the file
+  data <- read.csv(paste0(base_path, file_name), sep = "\t", header = TRUE)
+  
+  # Assign the data to a variable with the name stored in var_name
+  assign(var_name, data, envir = .GlobalEnv)
+}
+```
+
+
+```{r}
+listofdataframes
+```
+
+
+# All Genes
+
+```{r}
+df <- local_classic_allgenes
+```
+
+
+```{r}
+df
+```
+
+
+```{r}
+df <- df[!apply(is.na(df) | df$ORF == "", 1, all), ]
+df$ORF <- sub("/.*", "", df$ORF)
+```
+
+
+```{r}
+df
+```
+
+
+```{r}
+# we want the log2 fold change
+original_gene_list <- df$logFC
+
+# name the vector
+names(original_gene_list) <- df$ORF
+
+# omit any NA values
+gene_list <- na.omit(original_gene_list)
+
+# sort the list in decreasing order (required for clusterProfiler)
+gene_list <- sort(gene_list, decreasing = TRUE)
+```
+
+
+```{r}
+gene_list
+```
+
+
+```{r}
+df
+```
+
+
+```{r}
+filtdf <- df %>% distinct(ORF, .keep_all = TRUE)
+```
+
+
+```{r}
+df <- filtdf
+```
+
+
+```{r}
+df
+```
+
+
+```{r}
+gse <- gseGO(geneList = gene_list,
+             ont = "ALL",
+             keyType = "SYMBOL",
+             minGSSize = 10,
+             maxGSSize = 500,
+             pvalueCutoff = 0.05,
+             verbose = TRUE,
+             OrgDb = organism,
+             pAdjustMethod = "BH")
+```
+
+
+```{r}
+genesets <- gse[]
+```
+
+
+```{r}
+genesets
+genesets$Term <- genesets$ID
+genesets$Genes <- genesets$core_enrichment
+genesets$FDR <- genesets$p.adjust
+genesets$Genes <- gsub("/", ", ", genesets$Genes)
+```
+
+
+Save outputs to TSV files.
+```{r}
+write_tsv(genesets, file = "local_classic_results/clusterprofilerout_GO/GENESET_local_classic_allgenes.tsv")
+write_tsv(df, file = "local_classic_results/clusterprofilerout_GO/local_classic_allgenes.tsv")
+```
+
+
+# Disease-Assocaited Genes (DAGs)
+
+```{r}
+df <- local_classic_DAGs
+```
+
+
+```{r}
+df <- df[!apply(is.na(df) | df$ORF == "", 1, all),]
+df$ORF <- sub("/.*", "", df$ORF)
+```
+
+
+```{r}
+df
+```
+
+
+```{r}
+# we want the log2 fold change
+original_gene_list <- df$logFC
+
+# name the vector
+names(original_gene_list) <- df$ORF
+
+# omit any NA values
+gene_list <- na.omit(original_gene_list)
+
+# sort the list in decreasing order (required for clusterProfiler)
+gene_list <- sort(gene_list, decreasing = TRUE)
+```
+
+
+```{r}
+gene_list
+```
+
+
+```{r}
+df
+```
+
+
+```{r}
+filtdf <- df %>% distinct(ORF, .keep_all = TRUE)
+```
+
+
+```{r}
+df <- filtdf
+```
+
+
+```{r}
+df
+```
+
+
+```{r}
+gse <- gseGO(geneList = gene_list,
+             ont = "ALL",
+             keyType = "SYMBOL",
+             minGSSize = 10,
+             maxGSSize = 500,
+             pvalueCutoff = 0.05,
+             verbose = TRUE,
+             OrgDb = organism,
+             pAdjustMethod = "BH")
+```
+
+
+```{r}
+genesets <- gse[]
+```
+
+
+```{r}
+genesets
+genesets$Term <- genesets$ID
+genesets$Genes <- genesets$core_enrichment
+genesets$FDR <- genesets$p.adjust
+genesets$Genes <- gsub("/", ", ", genesets$Genes)
+```
+
+
+```{r}
+write_tsv(genesets, file = "local_classic_results/clusterprofilerout_GO/GENESET_local_classic_DAGs.tsv")
+write_tsv(df, file = "local_classic_results/clusterprofilerout_GO/local_classic_DAGs.tsv")
+```
+
+
+# Not Disease-Assocaited Genes (NDAGs)
+
+```{r}
+df <- local_classic_NDAGs
+```
+
+```{r}
+df <- df[!apply(is.na(df) | df$ORF == "", 1, all),]
+df$ORF <- sub("/.*", "", df$ORF)
+```
+
+```{r}
+df
+```
+
+
+
+```{r}
+# we want the log2 fold change
+original_gene_list <- df$logFC
+
+# name the vector
+names(original_gene_list) <- df$ORF
+
+# omit any NA values
+gene_list <- na.omit(original_gene_list)
+
+# sort the list in decreasing order (required for clusterProfiler)
+gene_list <- sort(gene_list, decreasing = TRUE)
+```
+
+
+```{r}
+gene_list
+```
+
+
+```{r}
+df
+```
+
+
+```{r}
+filtdf <- df %>% distinct(ORF, .keep_all = TRUE)
+```
+
+
+```{r}
+df <- filtdf
+```
+
+
+```{r}
+df
+```
+
+
+```{r}
+gse <- gseGO(geneList = gene_list,
+             ont = "ALL",
+             keyType = "SYMBOL",
+             minGSSize = 10,
+             maxGSSize = 500,
+             pvalueCutoff = 0.05,
+             verbose = TRUE,
+             OrgDb = organism,
+             pAdjustMethod = "none")
+```
+
+
+```{r}
+genesets <- gse[]
+```
+
+
+```{r}
+genesets
+genesets$Term <- genesets$ID
+genesets$Genes <- genesets$core_enrichment
+genesets$FDR <- genesets$p.adjust
+genesets$Genes <- gsub("/", ", ", genesets$Genes)
+```
+
+
+```{r} 
+write_tsv(genesets, file = "local_classic_results/clusterprofilerout_GO/GENESET_local_classic_NDAGs.tsv")
+write_tsv(df, file = "local_classic_results/clusterprofilerout_GO/local_classic_NDAGs.tsv")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+# Localised Basal Subtype #
+
+```{r}
+# Define the base file path
+base_path <- "local_basal_results/filtered-degs/"
+
+
+# Get the list of all .tsv files in the directory
+file_names <- list.files(path = base_path, pattern = "\\.tsv$")
+
+listofdataframes <- as.list(file_names)
+
+# Read the files and assign to variables named after the file names
+for (file_name in file_names) {
+  # Remove the extension (.tsv) from the file name to use as the variable name
+  var_name <- sub("\\.tsv$", "", file_name)
+  
+  # Read the file
+  data <- read.csv(paste0(base_path, file_name), sep = "\t", header = TRUE)
+  
+  # Assign the data to a variable with the name stored in var_name
+  assign(var_name, data, envir = .GlobalEnv)
+}
+```
+
+
+```{r}
+listofdataframes
+```
+
+
+# All
+
+```{r}
+df <- local_basal_allgenes
+```
+
+
+```{r}
+df
+```
+
+
+```{r}
+df <- df[!apply(is.na(df) | df$ORF == "", 1, all),]
+df$ORF <- sub("/.*", "", df$ORF)
+```
+
+
+```{r}
+df
+```
+
+
+
+
+```{r}
+# we want the log2 fold change
+original_gene_list <- df$logFC
+
+# name the vector
+names(original_gene_list) <- df$ORF
+
+# omit any NA values
+gene_list <- na.omit(original_gene_list)
+
+# sort the list in decreasing order (required for clusterProfiler)
+gene_list <- sort(gene_list, decreasing = TRUE)
+```
+
+
+```{r}
+gene_list
+```
+
+
+```{r}
+df
+```
+
+
+```{r}
+filtdf <- df %>% distinct(ORF, .keep_all = TRUE)
+```
+
+
+```{r}
+df <- filtdf
+```
+
+
+```{r}
+df
+```
+
+
+```{r}
+gse <- gseGO(geneList = gene_list,
+             ont = "ALL",
+             keyType = "SYMBOL",
+             minGSSize = 10,
+             maxGSSize = 500,
+             pvalueCutoff = 0.05,
+             verbose = TRUE,
+             OrgDb = organism,
+             pAdjustMethod = "BH")
+```
+
+
+```{r}
+genesets <- gse[]
+```
+
+
+```{r}
+genesets
+genesets$Term <- genesets$ID
+genesets$Genes <- genesets$core_enrichment
+genesets$FDR <- genesets$p.adjust
+genesets$Genes <- gsub("/", ", ", genesets$Genes)
+```
+
+
+Save outputs to TSV files.
+```{r}
+write_tsv(genesets, file = "local_basal_results/clusterprofilerout_GO/GENESET_local_basal_allgenes.tsv")
+write_tsv(df, file = "local_basal_results/clusterprofilerout_GO/local_basal_allgenes.tsv")
+```
+
+
+# Disease-Assocaited Genes (DAGs)
+
+```{r}
+df <- local_basal_DAGs
+```
+
+
+```{r}
+df <- df[!apply(is.na(df) | df$ORF == "", 1, all),]
+df$ORF <- sub("/.*", "", df$ORF)
+```
+
+
+```{r}
+df
+```
+
+
+```{r}
+# we want the log2 fold change
+original_gene_list <- df$logFC
+
+# name the vector
+names(original_gene_list) <- df$ORF
+
+# omit any NA values
+gene_list <- na.omit(original_gene_list)
+
+# sort the list in decreasing order (required for clusterProfiler)
+gene_list <- sort(gene_list, decreasing = TRUE)
+```
+
+
+```{r}
+gene_list
+```
+
+
+```{r}
+df
+```
+
+
+```{r}
+filtdf <- df %>% distinct(ORF, .keep_all = TRUE)
+```
+
+
+```{r}
+df <- filtdf
+```
+
+
+```{r}
+df
+```
+
+
+```{r}
+gse <- gseGO(geneList = gene_list,
+             ont = "ALL",
+             keyType = "SYMBOL",
+             minGSSize = 10,
+             maxGSSize = 500,
+             pvalueCutoff = 0.05,
+             verbose = TRUE,
+             OrgDb = organism,
+             pAdjustMethod = "BH")
+```
+
+
+```{r}
+genesets <- gse[]
+```
+
+
+```{r}
+genesets
+genesets$Term <- genesets$ID
+genesets$Genes <- genesets$core_enrichment
+genesets$FDR <- genesets$p.adjust
+genesets$Genes <- gsub("/", ", ", genesets$Genes)
+```
+
+
+```{r}
+write_tsv(genesets, file = "local_basal_results/clusterprofilerout_GO/GENESET_local_basal_DAGs.tsv")
+write_tsv(df, file = "local_basal_results/clusterprofilerout_GO/local_basal_DAGs.tsv")
+```
+
+
+# Not Disease-Assocaited Genes (NDAGs)
+
+```{r}
+df <- local_basal_NDAGs
+```
+
+
+```{r}
+df <- df[!apply(is.na(df) | df$ORF == "", 1, all),]
+df$ORF <- sub("/.*", "", df$ORF)
+```
+
+
+```{r}
+df
+```
+
+
+```{r}
+# we want the log2 fold change
+original_gene_list <- df$logFC
+
+# name the vector
+names(original_gene_list) <- df$ORF
+
+# omit any NA values
+gene_list <- na.omit(original_gene_list)
+
+# sort the list in decreasing order (required for clusterProfiler)
+gene_list <- sort(gene_list, decreasing = TRUE)
+```
+
+
+```{r}
+gene_list
+```
+
+
+```{r}
+df
+```
+
+
+```{r}
+filtdf <- df %>% distinct(ORF, .keep_all = TRUE)
+```
+
+
+```{r}
+df <- filtdf
+```
+
+
+```{r}
+df
+```
+
+
+
+```{r}
+gse <- gseGO(geneList = gene_list,
+             ont = "ALL",
+             keyType = "SYMBOL",
+             minGSSize = 10,
+             maxGSSize = 500,
+             pvalueCutoff = 0.05,
+             verbose = TRUE,
+             OrgDb = organism,
+             pAdjustMethod = "none")
+```
+
+
+```{r}
+genesets <- gse[]
+```
+
+
+```{r}
+genesets
+genesets$Term <- genesets$ID
+genesets$Genes <- genesets$core_enrichment
+genesets$FDR <- genesets$p.adjust
+genesets$Genes <- gsub("/", ", ", genesets$Genes)
+```
+
+
+```{r} 
+write_tsv(genesets, file = "local_basal_results/clusterprofilerout_GO/GENESET_local_basal_NDAGs.tsv")
+write_tsv(df, file = "local_basal_results/clusterprofilerout_GO/local_basal_NDAGs.tsv")
+```
